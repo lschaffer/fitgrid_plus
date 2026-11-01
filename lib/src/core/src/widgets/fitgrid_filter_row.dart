@@ -266,6 +266,8 @@ class _FilterFieldState<T> extends State<_FilterField<T>> {
   void _clear() {
     _text.clear();
     widget.filter.setFilter(_id, null);
+    widget.filter.setColumnFilter(_id, null);
+    if (mounted) setState(() {});
   }
 
   /// What the hint says for a filter the field cannot show as text:
@@ -342,20 +344,30 @@ class _FilterFieldState<T> extends State<_FilterField<T>> {
               minWidth: theme.sortIconSize + 8,
             ),
             suffixIcon: active || text.isNotEmpty
-                ? IconButton(
-                    tooltip: strings.clearFilter,
-                    padding: EdgeInsets.zero,
-                    constraints: BoxConstraints(
-                      minWidth: theme.sortIconSize + 8,
-                      minHeight: theme.sortIconSize + 8,
+                ? MouseRegion(
+                    cursor: SystemMouseCursors.click,
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: _clear,
+                      child: Tooltip(
+                        message: strings.clearFilter,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                          child: Icon(
+                            Icons.close,
+                            size: theme.sortIconSize + 2,
+                            color: active
+                                ? theme.focusOutline
+                                : theme.placeholderForeground,
+                          ),
+                        ),
+                      ),
                     ),
-                    iconSize: theme.sortIconSize,
-                    icon: const Icon(Icons.close),
-                    onPressed: _clear,
                   )
                 : null,
             suffixIconConstraints: BoxConstraints(
-              minWidth: theme.sortIconSize + 8,
+              minWidth: theme.sortIconSize + 12,
+              minHeight: theme.sortIconSize + 12,
             ),
             border: _border(theme.border),
             enabledBorder: _border(invalid ? error : theme.border),

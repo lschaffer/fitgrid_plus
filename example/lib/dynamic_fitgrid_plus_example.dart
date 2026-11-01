@@ -101,34 +101,37 @@ EMP-107,George Clark,Finance,118000,2019-08-12,true''';
                   ),
                 ),
               ),
-              child: Row(
-                children: [
-                  Icon(Icons.cloud_download_rounded, color: theme.colorScheme.primary, size: 22),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Dynamic Ingestion DataGrid',
-                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                  ),
-                  const Spacer(),
-                  FilledButton.tonalIcon(
-                    icon: const Icon(Icons.table_rows_outlined, size: 16),
-                    label: const Text('Load CSV Sample'),
-                    onPressed: _loadInitialDelimitedData,
-                  ),
-                  const SizedBox(width: 8),
-                  FilledButton.tonalIcon(
-                    icon: const Icon(Icons.text_snippet_outlined, size: 16),
-                    label: const Text('Load Markdown Table'),
-                    onPressed: _loadMarkdownSample,
-                  ),
-                  const SizedBox(width: 8),
-                  FilledButton.icon(
-                    icon: const Icon(Icons.manage_history, size: 16),
-                    label: const Text('Datasource Manager'),
-                    onPressed: () =>
-                        FitGridPlusDatasourceManagerDialog.show(context, _controller),
-                  ),
-                ],
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    Icon(Icons.cloud_download_rounded, color: theme.colorScheme.primary, size: 22),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Dynamic Ingestion DataGrid',
+                      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(width: 20),
+                    FilledButton.tonalIcon(
+                      icon: const Icon(Icons.table_rows_outlined, size: 16),
+                      label: const Text('Load CSV Sample'),
+                      onPressed: _loadInitialDelimitedData,
+                    ),
+                    const SizedBox(width: 8),
+                    FilledButton.tonalIcon(
+                      icon: const Icon(Icons.text_snippet_outlined, size: 16),
+                      label: const Text('Load Markdown Table'),
+                      onPressed: _loadMarkdownSample,
+                    ),
+                    const SizedBox(width: 8),
+                    FilledButton.icon(
+                      icon: const Icon(Icons.manage_history, size: 16),
+                      label: const Text('Datasource Manager'),
+                      onPressed: () =>
+                          FitGridPlusDatasourceManagerDialog.show(context, _controller),
+                    ),
+                  ],
+                ),
               ),
             ),
             Expanded(

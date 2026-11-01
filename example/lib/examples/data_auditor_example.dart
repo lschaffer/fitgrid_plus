@@ -158,50 +158,53 @@ class _DataAuditorExamplePageState extends State<DataAuditorExamplePage> {
                   ),
                 ),
               ),
-              child: Row(
-                children: [
-                  Icon(Icons.health_and_safety_rounded, color: scoreColor, size: 22),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Data Quality Auditor & Cleaner',
-                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(width: 12),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: scoreColor.withAlpha(30),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: scoreColor.withAlpha(120)),
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    Icon(Icons.health_and_safety_rounded, color: scoreColor, size: 22),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Data Quality Auditor & Cleaner',
+                      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                     ),
-                    child: Text(
-                      'Health Score: $score%',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: scoreColor,
+                    const SizedBox(width: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: scoreColor.withAlpha(30),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: scoreColor.withAlpha(120)),
+                      ),
+                      child: Text(
+                        'Health Score: $score%',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: scoreColor,
+                        ),
                       ),
                     ),
-                  ),
-                  const Spacer(),
-                  FilledButton.tonalIcon(
-                    icon: const Icon(Icons.refresh, size: 16),
-                    label: const Text('Reset Dirty Data'),
-                    onPressed: _loadDirtyDataset,
-                  ),
-                  const SizedBox(width: 8),
-                  FilledButton.tonalIcon(
-                    icon: const Icon(Icons.auto_fix_high, size: 16),
-                    label: const Text('1-Click Clean All'),
-                    onPressed: _cleanAllDirectly,
-                  ),
-                  const SizedBox(width: 8),
-                  FilledButton.icon(
-                    icon: const Icon(Icons.troubleshoot, size: 16),
-                    label: const Text('Inspect Anomaly Report'),
-                    onPressed: _openAuditorDialog,
-                  ),
-                ],
+                    const SizedBox(width: 20),
+                    FilledButton.tonalIcon(
+                      icon: const Icon(Icons.refresh, size: 16),
+                      label: const Text('Reset Dirty Data'),
+                      onPressed: _loadDirtyDataset,
+                    ),
+                    const SizedBox(width: 8),
+                    FilledButton.tonalIcon(
+                      icon: const Icon(Icons.auto_fix_high, size: 16),
+                      label: const Text('1-Click Clean All'),
+                      onPressed: _cleanAllDirectly,
+                    ),
+                    const SizedBox(width: 8),
+                    FilledButton.icon(
+                      icon: const Icon(Icons.troubleshoot, size: 16),
+                      label: const Text('Inspect Anomaly Report'),
+                      onPressed: _openAuditorDialog,
+                    ),
+                  ],
+                ),
               ),
             ),
             Expanded(

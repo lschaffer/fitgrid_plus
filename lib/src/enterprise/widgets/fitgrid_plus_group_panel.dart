@@ -213,16 +213,19 @@ class FitGridPlusGroupPanel extends StatelessWidget {
                         size: 12,
                         color: colorScheme.primary,
                       ),
-                      const SizedBox(width: 2),
-                      InkWell(
-                        onTap: () => controller.removeGroup(field),
-                        borderRadius: BorderRadius.circular(12),
-                        child: Padding(
-                          padding: const EdgeInsets.all(2.0),
-                          child: Icon(
-                            Icons.close,
-                            size: 14,
-                            color: colorScheme.onSurfaceVariant,
+                      const SizedBox(width: 4),
+                      MouseRegion(
+                        cursor: SystemMouseCursors.click,
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: () => controller.removeGroup(field),
+                          child: Padding(
+                            padding: const EdgeInsets.all(4.0),
+                            child: Icon(
+                              Icons.close,
+                              size: 14,
+                              color: colorScheme.onSurfaceVariant,
+                            ),
                           ),
                         ),
                       ),

@@ -1677,10 +1677,15 @@ class FitGridPlusController extends ChangeNotifier {
   /// Removes a column from active grouping.
   void removeGroup(String field) {
     final actual = _resolveField(field) ?? field;
-    if (_activeGrouping.contains(actual)) {
-      final updated = List<String>.from(_activeGrouping)..remove(actual);
-      setGrouping(updated);
-    }
+    final updated = List<String>.from(_activeGrouping);
+    updated.removeWhere(
+      (f) =>
+          f == field ||
+          f == actual ||
+          f.toLowerCase() == field.toLowerCase() ||
+          f.toLowerCase() == actual.toLowerCase(),
+    );
+    setGrouping(updated);
   }
 
   /// Clears all active grouping.
@@ -1845,8 +1850,12 @@ class FitGridPlusController extends ChangeNotifier {
   /// Removes filter from a specific column.
   void removeFilter(String field) {
     final actualField = _resolveField(field) ?? field;
+    _activeFilters.remove(field);
     _activeFilters.remove(actualField);
     _fitController?.filter.setFilter(actualField, null);
+    if (actualField != field) {
+      _fitController?.filter.setFilter(field, null);
+    }
     notifyListeners();
   }
 

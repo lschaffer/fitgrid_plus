@@ -215,27 +215,30 @@ class _RangeSelectionExamplePageState extends State<RangeSelectionExamplePage> {
                   ),
                 ),
               ),
-              child: Row(
-                children: [
-                  Icon(Icons.select_all_rounded, color: theme.colorScheme.primary, size: 22),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Range Selection & Summary Metrics',
-                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                  ),
-                  const Spacer(),
-                  FilledButton.tonalIcon(
-                    icon: const Icon(Icons.flash_on_outlined, size: 16),
-                    label: const Text('Select Q1-Q4 Block'),
-                    onPressed: _selectQ1Q4Block,
-                  ),
-                  const SizedBox(width: 8),
-                  FilledButton.icon(
-                    icon: const Icon(Icons.copy, size: 16),
-                    label: const Text('Copy Selection (TSV)'),
-                    onPressed: _copySelectedRange,
-                  ),
-                ],
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    Icon(Icons.select_all_rounded, color: theme.colorScheme.primary, size: 22),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Range Selection & Summary Metrics',
+                      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(width: 20),
+                    FilledButton.tonalIcon(
+                      icon: const Icon(Icons.flash_on_outlined, size: 16),
+                      label: const Text('Select Q1-Q4 Block'),
+                      onPressed: _selectQ1Q4Block,
+                    ),
+                    const SizedBox(width: 8),
+                    FilledButton.icon(
+                      icon: const Icon(Icons.copy, size: 16),
+                      label: const Text('Copy Selection (TSV)'),
+                      onPressed: _copySelectedRange,
+                    ),
+                  ],
+                ),
               ),
             ),
             Expanded(

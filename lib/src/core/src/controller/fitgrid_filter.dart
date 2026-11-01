@@ -87,7 +87,9 @@ class FitGridFilterState<T> extends ChangeNotifier {
   /// row. A filter on a column without one is kept but ignored.
   void setFilter(String columnId, FitGridColumnFilter? filter) {
     if (filter == null) {
-      if (_filters.remove(columnId) == null) return;
+      final removed = _filters.remove(columnId);
+      final removedCol = _columnFilters.remove(columnId);
+      if (removed == null && removedCol == null) return;
     } else {
       if (_filters[columnId] == filter) return;
       _filters[columnId] = filter;

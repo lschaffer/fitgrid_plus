@@ -143,7 +143,7 @@ class _FitGridPlusShowcaseAppState extends State<FitGridPlusShowcaseApp> {
   }
 }
 
-class ShowcaseGalleryShell extends StatelessWidget {
+class ShowcaseGalleryShell extends StatefulWidget {
   final ShowcaseDemo currentDemo;
   final ValueChanged<ShowcaseDemo> onSelectDemo;
   final bool isDarkMode;
@@ -158,13 +158,33 @@ class ShowcaseGalleryShell extends StatelessWidget {
   });
 
   @override
+  State<ShowcaseGalleryShell> createState() => _ShowcaseGalleryShellState();
+}
+
+class _ShowcaseGalleryShellState extends State<ShowcaseGalleryShell> {
+  bool _isSidebarVisible = true;
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDesktop = MediaQuery.sizeOf(context).width >= 900;
 
     return Scaffold(
-      drawer: isDesktop ? null : _buildDrawer(context),
+      drawer: _buildDrawer(context),
       appBar: AppBar(
+        leading: Builder(
+          builder: (ctx) => IconButton(
+            icon: const Icon(Icons.menu),
+            tooltip: 'Toggle Navigation Menu',
+            onPressed: () {
+              if (isDesktop) {
+                setState(() => _isSidebarVisible = !_isSidebarVisible);
+              } else {
+                Scaffold.of(ctx).openDrawer();
+              }
+            },
+          ),
+        ),
         title: Row(
           children: [
             Container(
@@ -177,23 +197,23 @@ class ShowcaseGalleryShell extends StatelessWidget {
             ),
             const SizedBox(width: 10),
             Text(
-              currentDemo.title,
+              widget.currentDemo.title,
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
           ],
         ),
         actions: [
           IconButton(
-            tooltip: isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode',
-            icon: Icon(isDarkMode ? Icons.light_mode_outlined : Icons.dark_mode_outlined),
-            onPressed: onToggleTheme,
+            tooltip: widget.isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode',
+            icon: Icon(widget.isDarkMode ? Icons.light_mode_outlined : Icons.dark_mode_outlined),
+            onPressed: widget.onToggleTheme,
           ),
           const SizedBox(width: 8),
         ],
       ),
       body: Row(
         children: [
-          if (isDesktop) _buildSidebar(context),
+          if (isDesktop && _isSidebarVisible) _buildSidebar(context),
           Expanded(child: _buildCurrentDemoView()),
         ],
       ),
@@ -216,7 +236,7 @@ class ShowcaseGalleryShell extends StatelessWidget {
       child: Column(
         children: [
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             alignment: Alignment.centerLeft,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -225,11 +245,18 @@ class ShowcaseGalleryShell extends StatelessWidget {
                   children: [
                     const Icon(Icons.flash_on, color: Color(0xFF0078D4), size: 20),
                     const SizedBox(width: 6),
-                    Text(
-                      'FitGrid Plus ⚡',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
+                    Expanded(
+                      child: Text(
+                        'FitGrid Plus ⚡',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.menu_open, size: 18),
+                      tooltip: 'Collapse Sidebar',
+                      onPressed: () => setState(() => _isSidebarVisible = false),
                     ),
                   ],
                 ),
@@ -246,7 +273,7 @@ class ShowcaseGalleryShell extends StatelessWidget {
             child: ListView(
               padding: const EdgeInsets.symmetric(vertical: 8),
               children: ShowcaseDemo.values.map((demo) {
-                final isSelected = demo == currentDemo;
+                final isSelected = demo == widget.currentDemo;
                 return Container(
                   margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
@@ -283,7 +310,7 @@ class ShowcaseGalleryShell extends StatelessWidget {
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
-                    onTap: () => onSelectDemo(demo),
+                    onTap: () => widget.onSelectDemo(demo),
                   ),
                 );
               }).toList(),
@@ -315,10 +342,10 @@ class ShowcaseGalleryShell extends StatelessWidget {
                     leading: Icon(demo.icon),
                     title: Text(demo.title),
                     subtitle: Text(demo.subtitle, maxLines: 1, overflow: TextOverflow.ellipsis),
-                    selected: demo == currentDemo,
+                    selected: demo == widget.currentDemo,
                     onTap: () {
                       Navigator.of(context).pop();
-                      onSelectDemo(demo);
+                      widget.onSelectDemo(demo);
                     },
                   );
                 }).toList(),
@@ -331,46 +358,46 @@ class ShowcaseGalleryShell extends StatelessWidget {
   }
 
   Widget _buildCurrentDemoView() {
-    switch (currentDemo) {
+    switch (widget.currentDemo) {
       case ShowcaseDemo.superstore:
         return SuperstoreEnterpriseExamplePage(
-          isDarkMode: isDarkMode,
-          onToggleTheme: onToggleTheme,
+          isDarkMode: widget.isDarkMode,
+          onToggleTheme: widget.onToggleTheme,
         );
       case ShowcaseDemo.conditionalFormatting:
         return ConditionalFormattingExamplePage(
-          isDarkMode: isDarkMode,
-          onToggleTheme: onToggleTheme,
+          isDarkMode: widget.isDarkMode,
+          onToggleTheme: widget.onToggleTheme,
         );
       case ShowcaseDemo.rangeSelection:
         return RangeSelectionExamplePage(
-          isDarkMode: isDarkMode,
-          onToggleTheme: onToggleTheme,
+          isDarkMode: widget.isDarkMode,
+          onToggleTheme: widget.onToggleTheme,
         );
       case ShowcaseDemo.masterDetail:
         return MasterDetailExamplePage(
-          isDarkMode: isDarkMode,
-          onToggleTheme: onToggleTheme,
+          isDarkMode: widget.isDarkMode,
+          onToggleTheme: widget.onToggleTheme,
         );
       case ShowcaseDemo.dynamicGrid:
         return DynamicFitGridPlusExamplePage(
-          isDarkMode: isDarkMode,
-          onToggleTheme: onToggleTheme,
+          isDarkMode: widget.isDarkMode,
+          onToggleTheme: widget.onToggleTheme,
         );
       case ShowcaseDemo.excelImport:
         return ExcelImportExamplePage(
-          isDarkMode: isDarkMode,
-          onToggleTheme: onToggleTheme,
+          isDarkMode: widget.isDarkMode,
+          onToggleTheme: widget.onToggleTheme,
         );
       case ShowcaseDemo.dataAuditor:
         return DataAuditorExamplePage(
-          isDarkMode: isDarkMode,
-          onToggleTheme: onToggleTheme,
+          isDarkMode: widget.isDarkMode,
+          onToggleTheme: widget.onToggleTheme,
         );
       case ShowcaseDemo.mobileCardView:
         return MobileCardViewExamplePage(
-          isDarkMode: isDarkMode,
-          onToggleTheme: onToggleTheme,
+          isDarkMode: widget.isDarkMode,
+          onToggleTheme: widget.onToggleTheme,
         );
     }
   }
