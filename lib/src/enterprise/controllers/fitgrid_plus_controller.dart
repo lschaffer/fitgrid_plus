@@ -798,13 +798,13 @@ class FitGridPlusController extends ChangeNotifier {
     }
 
     if (_activeGrouping.isNotEmpty) {
-      setGrouping(_activeGrouping);
+      setGrouping(_activeGrouping, notify: false);
     }
     if (_activeSortColumn != null) {
-      sort(_activeSortColumn!, descending: _isSortDescending);
+      sort(_activeSortColumn!, descending: _isSortDescending, notify: false);
     }
     if (_searchQuery.isNotEmpty) {
-      search(_searchQuery);
+      search(_searchQuery, notify: false);
     }
     if (_hiddenFields.isNotEmpty) {
       for (final col in _columns) {
@@ -1642,7 +1642,7 @@ class FitGridPlusController extends ChangeNotifier {
   }
 
   /// Sets multi-level hierarchical grouping by column fields.
-  void setGrouping(List<String> fields) {
+  void setGrouping(List<String> fields, {bool notify = true}) {
     _activeGrouping = List.from(fields);
     if (_fitController != null) {
       if (fields.isEmpty) {
@@ -1660,7 +1660,9 @@ class FitGridPlusController extends ChangeNotifier {
         _fitController!.grouping.expandAll();
       }
     }
-    notifyListeners();
+    if (notify) {
+      notifyListeners();
+    }
   }
 
   /// Adds a column to active grouping.
@@ -2138,10 +2140,12 @@ class FitGridPlusController extends ChangeNotifier {
   }
 
   /// Applies global text search across all columns.
-  void search(String query) {
+  void search(String query, {bool notify = true}) {
     _searchQuery = query;
     _fitController?.filter.query = query.trim();
-    notifyListeners();
+    if (notify) {
+      notifyListeners();
+    }
   }
 
   /// Alias for [search].
@@ -2153,7 +2157,12 @@ class FitGridPlusController extends ChangeNotifier {
   }
 
   /// Applies column sorting.
-  void sort(String field, {bool descending = false, bool append = false}) {
+  void sort(
+    String field, {
+    bool descending = false,
+    bool append = false,
+    bool notify = true,
+  }) {
     final actual = _resolveField(field) ?? field;
     final dir = descending
         ? FitGridSortDirection.descending
@@ -2173,7 +2182,9 @@ class FitGridPlusController extends ChangeNotifier {
 
     _activeSortColumn = field;
     _isSortDescending = descending;
-    notifyListeners();
+    if (notify) {
+      notifyListeners();
+    }
   }
 
   /// Sets column sorting.
