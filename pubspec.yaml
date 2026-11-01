@@ -1,0 +1,32 @@
+name: fitgrid_plus
+description: "High-performance virtualized canvas Flutter DataGrid with DevExtreme-style editing (cell, row, modal form), dynamic Pivot Grids, banded headers, Excel import/export, and mobile card feed."
+version: 0.1.0
+repository: https://github.com/lschaffer/fitgrid_plus
+issue_tracker: https://github.com/lschaffer/fitgrid_plus/issues
+topics:
+  - datagrid
+  - table
+  - spreadsheet
+  - pivot-table
+  - excel
+
+environment:
+  sdk: ^3.13.0
+  flutter: ">=3.47.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  material_ui: ^1.8.0
+  intl: ^0.20.2
+  file_saver: ^0.7.0
+  file_picker: ^13.1.0
+  shared_preferences: ^2.5.6
+  archive: ^4.5.2
+  xml: ^7.1.0
+  yaml: ^3.1.4
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0

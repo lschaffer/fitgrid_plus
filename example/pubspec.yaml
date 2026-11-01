@@ -1,0 +1,25 @@
+name: fitgrid_plus_example
+description: Demonstrates how to use the fitgrid_plus enterprise DataGrid package.
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.13.0
+  flutter: ">=3.47.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  fitgrid_plus:
+    path: ../
+  material_ui: ^1.8.0
+  intl: ^0.20.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+

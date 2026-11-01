@@ -1,0 +1,1729 @@
+import 'package:flutter/foundation.dart';
+import 'package:intl/intl.dart';
+import 'package:material_ui/material_ui.dart';
+
+import '../../core/fitgrid_table.dart';
+import '../config/fitgrid_plus_settings_storage.dart';
+import '../controllers/fitgrid_plus_controller.dart';
+import '../models/fitgrid_plus_column.dart';
+import '../models/fitgrid_plus_conditional_format.dart';
+import '../models/fitgrid_plus_context_action.dart';
+import '../models/fitgrid_plus_data_source.dart';
+import '../models/fitgrid_plus_editing_options.dart';
+import '../models/fitgrid_plus_master_detail.dart';
+import '../models/fitgrid_plus_view_mode.dart';
+import '../theme/fitgrid_plus_theme.dart';
+import 'fitgrid_plus_card_view.dart';
+import 'fitgrid_plus_context_menu.dart';
+import 'fitgrid_plus_group_panel.dart';
+import 'fitgrid_plus_pivot_chart.dart';
+import 'fitgrid_plus_toolbar.dart';
+
+/// An enterprise DataGrid widget for Flutter powered by the high-performance [FitGrid] canvas engine.
+///
+/// Combines high-performance canvas virtualization, DevExtreme-style editing (inline cell,
+/// inline row, modal popup form dialog), multi-level hierarchical grouping with chip panel,
+/// dynamic Pivot Grids with banded column headers and canvas split charts, Excel (.xlsx),
+/// CSV, TSV, and JSON import/export, responsive mobile card feed with swipe actions,
+/// rectangular cell range selection with instant summary statistics, and conditional formatting.
+class FitGridPlus extends StatefulWidget {
+  final FitGridPlusDataSource dataSource;
+  final FitGridPlusController? controller;
+  final bool showToolbar;
+  final FitGridThemeData? theme;
+
+  /// Optional configuration for backwards-compatibility.
+  final dynamic configuration;
+
+  /// Whether client-side pagination should be enabled by default.
+  final bool enablePagination;
+
+  /// Page size if pagination is enabled.
+  final int? pageSize;
+
+  /// Whether to show the total number of rows in the pagination footer.
+  final bool showTotalRows;
+
+  /// Whether to display the "Go to Page" button in the pagination footer.
+  final bool enableGotoPage;
+
+  /// Whether changes to column visibility, grouping, sorting, and filters
+  /// are automatically saved and restored when the grid initializes.
+  final bool autoSave;
+
+  /// Unique key used to persist grid settings when [autoSave] is true.
+  final String persistenceKey;
+
+  /// Optional initial settings map to apply when grid is loaded.
+  final Map<String, dynamic>? initialSettings;
+
+  /// Callback triggered whenever grid settings change.
+  final void Function(Map<String, dynamic> settings)? onSettingsChanged;
+
+  /// Optional editing configuration supporting cell, row, and form (popup) editing modes.
+  final FitGridPlusEditingOptions? editingOptions;
+
+  /// Optional callback invoked when a row is double-tapped.
+  final void Function(Map<String, dynamic> row, int rowIndex)? onRowDoubleTap;
+
+  /// Layout presentation mode: [FitGridPlusViewMode.grid] (DataGrid) or [FitGridPlusViewMode.card] (responsive card feed).
+  final FitGridPlusViewMode? viewMode;
+
+  /// Customization options for the responsive card feed view.
+  final FitGridPlusCardViewOptions? cardViewOptions;
+
+  /// Configuration for right-click and long-press contextual menus.
+  final FitGridPlusContextMenuConfiguration? contextMenuConfiguration;
+
+  /// Optional master-detail configuration for expandable child rows and nested tables.
+  final FitGridPlusMasterDetailOptions? masterDetailOptions;
+
+  /// Shorthand builder for the detail panel beneath an expanded row.
+  final Widget Function(
+    BuildContext context,
+    Map<String, dynamic> row,
+    int rowIndex,
+  )?
+  detailRowBuilder;
+
+  /// Whether rectangular cell range selection is enabled.
+  final bool cellSelection;
+
+  /// Whether copying to clipboard (Ctrl+C / Cmd+C) is enabled.
+  final bool enableCopy;
+
+  /// Whether pasting from clipboard (Ctrl+V / Cmd+V) into editable columns is enabled.
+  final bool enablePaste;
+
+  /// Whether to display a floating or docked summary status bar when cells are selected.
+  final bool showSelectionStatusBar;
+
+  /// Optional row background color resolver for conditional formatting.
+  final Color? Function(Map<String, dynamic> row, int rowIndex)? rowColor;
+
+  /// Optional active conditional format rules.
+  final List<FitGridPlusConditionalFormat>? conditionalFormats;
+
+  /// Whether to enable dynamic DataGrid datasource management.
+  final bool dynamicGrid;
+
+  /// Optional column groups (banded headers) to display above column headers.
+  final List<FitGridColumnGroup>? columnGroups;
+
+  const FitGridPlus({
+    super.key,
+    required this.dataSource,
+    this.controller,
+    this.showToolbar = true,
+    this.theme,
+    this.configuration,
+    this.enablePagination = false,
+    this.pageSize,
+    this.showTotalRows = true,
+    this.enableGotoPage = true,
+    this.autoSave = false,
+    this.persistenceKey = 'fitgrid_plus_default_settings',
+    this.initialSettings,
+    this.onSettingsChanged,
+    this.editingOptions,
+    this.onRowDoubleTap,
+    this.columnGroups,
+    this.dynamicGrid = false,
+    this.rowColor,
+    this.conditionalFormats,
+    this.cellSelection = false,
+    this.enableCopy = true,
+    this.enablePaste = true,
+    this.showSelectionStatusBar = false,
+    this.masterDetailOptions,
+    this.detailRowBuilder,
+    this.viewMode,
+    this.cardViewOptions,
+    this.contextMenuConfiguration,
+  });
+
+  @override
+  State<FitGridPlus> createState() => _FitGridPlusState();
+}
+
+class _FitGridPlusState extends State<FitGridPlus> {
+  late FitGridPlusController _controller;
+  late FitGridController<Map<String, dynamic>> _fitController;
+  bool _internalController = false;
+  bool _isLoading = true;
+  double _pivotSplitRatio = 0.60;
+  double? _splitDragStartPos;
+  double? _splitDragStartRatio;
+  bool _isDraggingSplitter = false;
+
+  FitGridPlusEditMode? _lastEditMode;
+  int? _lastEditingRowIndex;
+  FitGridPlusActionColumnPosition? _lastActionPos;
+  bool? _lastAllowUpdating;
+  bool? _lastAllowDeleting;
+  List<FitGridPlusColumn>? _lastColumns;
+
+  List<FitGridPlusColumn> get _effectiveColumns {
+    if (_controller.columns.isNotEmpty) {
+      return _controller.columns;
+    }
+    if (_controller.dataSource != null &&
+        _controller.dataSource!.columns.isNotEmpty) {
+      return _controller.dataSource!.columns;
+    }
+    return widget.dataSource.columns;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.controller != null) {
+      _controller = widget.controller!;
+    } else {
+      _controller = FitGridPlusController();
+      _internalController = true;
+    }
+    if (widget.viewMode != null) {
+      _controller.setViewMode(widget.viewMode!, notify: false);
+    }
+    if (widget.contextMenuConfiguration != null) {
+      _controller.setContextMenuConfig(
+        widget.contextMenuConfiguration!,
+        notify: false,
+      );
+    }
+    if (widget.editingOptions != null) {
+      _controller.setEditingOptions(widget.editingOptions!, notify: false);
+    }
+    if (widget.conditionalFormats != null) {
+      for (final fmt in widget.conditionalFormats!) {
+        _controller.addConditionalFormat(fmt, notify: false);
+      }
+    }
+    final initialMasterDetail =
+        widget.masterDetailOptions ??
+        (widget.detailRowBuilder != null
+            ? FitGridPlusMasterDetailOptions(
+                detailBuilder: widget.detailRowBuilder!,
+              )
+            : null);
+    if (initialMasterDetail != null) {
+      _controller.setMasterDetailOptions(initialMasterDetail, notify: false);
+    }
+
+    _lastEditMode = _controller.editingOptions.mode;
+    _lastEditingRowIndex = _controller.editingRowIndex;
+    _lastActionPos = _controller.editingOptions.actionColumnPosition;
+    _lastAllowUpdating = _controller.editingOptions.allowUpdating;
+    _lastAllowDeleting = _controller.editingOptions.allowDeleting;
+
+    final fitColumns = _buildFitColumns();
+    _lastColumns = List.of(_effectiveColumns);
+    final isLocalData = widget.dataSource is LocalFitGridPlusDataSource;
+    final initialRows = isLocalData
+        ? (widget.dataSource as LocalFitGridPlusDataSource).data
+        : const <Map<String, dynamic>>[];
+    _isLoading = !isLocalData && initialRows.isEmpty;
+    _fitController = FitGridController<Map<String, dynamic>>(
+      columns: fitColumns,
+      rows: initialRows,
+      selectionMode: FitGridSelectionMode.multiple,
+    );
+
+    for (final col in _effectiveColumns) {
+      if (col.width != null && col.width! > 0) {
+        _fitController.columns.setWidth(col.field, col.width!);
+      }
+    }
+
+    if (widget.pageSize != null || widget.enablePagination) {
+      _fitController.pagination.enabled = true;
+      _fitController.pagination.pageSize = widget.pageSize ?? 40;
+    }
+
+    _controller.attach(
+      fitController: _fitController,
+      columns: widget.dataSource.columns,
+      dataSource: widget.dataSource,
+      notify: false,
+    );
+
+    _controller.addListener(_onControllerStateChangedForAutoSave);
+    _controller.addListener(_onControllerChangedForEditing);
+    _controller.addListener(_onControllerChanged);
+
+    _loadData();
+    widget.dataSource.addListener(_onDataSourceChanged);
+  }
+
+  bool _hasRestoredSettings = false;
+
+  void _restoreInitialSettingsIfNeeded() {
+    if (_hasRestoredSettings) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      try {
+        if (widget.initialSettings != null) {
+          _controller.restoreSettings(widget.initialSettings!);
+        } else if (widget.autoSave) {
+          final saved =
+              await FitGridPlusSettingsStorage.loadAsync(widget.persistenceKey) ??
+              FitGridPlusSettingsStorage.load(widget.persistenceKey);
+          if (saved != null && mounted) {
+            _controller.restoreSettings(saved);
+          }
+        }
+      } finally {
+        _hasRestoredSettings = true;
+      }
+    });
+  }
+
+  void _onControllerStateChangedForAutoSave() {
+    if (!_hasRestoredSettings || !_controller.isAttached) return;
+    final current = _controller.exportSettings();
+    widget.onSettingsChanged?.call(current);
+    if (widget.autoSave) {
+      FitGridPlusSettingsStorage.save(widget.persistenceKey, current);
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant FitGridPlus oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.dataSource != oldWidget.dataSource) {
+      oldWidget.dataSource.removeListener(_onDataSourceChanged);
+      widget.dataSource.addListener(_onDataSourceChanged);
+      _controller.attach(
+        fitController: _fitController,
+        columns: widget.dataSource.columns,
+        dataSource: widget.dataSource,
+        notify: false,
+      );
+      _fitController.columns.columns = _buildFitColumns();
+      _lastColumns = List.of(widget.dataSource.columns);
+      _loadData();
+    }
+    if (widget.editingOptions != oldWidget.editingOptions &&
+        widget.editingOptions != null) {
+      _controller.setEditingOptions(widget.editingOptions!, notify: false);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _fitController.columns.columns = _buildFitColumns();
+        }
+      });
+    }
+    if (widget.masterDetailOptions != oldWidget.masterDetailOptions ||
+        widget.detailRowBuilder != oldWidget.detailRowBuilder) {
+      final updatedMasterDetail =
+          widget.masterDetailOptions ??
+          (widget.detailRowBuilder != null
+              ? FitGridPlusMasterDetailOptions(
+                  detailBuilder: widget.detailRowBuilder!,
+                )
+              : null);
+      if (updatedMasterDetail != _controller.masterDetailOptions) {
+        _controller.setMasterDetailOptions(updatedMasterDetail, notify: false);
+      }
+    }
+    if (widget.viewMode != null && widget.viewMode != oldWidget.viewMode) {
+      _controller.setViewMode(widget.viewMode!, notify: false);
+    }
+    if (widget.contextMenuConfiguration != null &&
+        widget.contextMenuConfiguration != oldWidget.contextMenuConfiguration) {
+      _controller.setContextMenuConfig(
+        widget.contextMenuConfiguration!,
+        notify: false,
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.dataSource.removeListener(_onDataSourceChanged);
+    _controller.removeListener(_onControllerStateChangedForAutoSave);
+    _controller.removeListener(_onControllerChangedForEditing);
+    _controller.removeListener(_onControllerChanged);
+    _fitController.dispose();
+    if (_internalController) {
+      _controller.dispose();
+    }
+    super.dispose();
+  }
+
+  void _onControllerChanged() {
+    if (mounted) setState(() {});
+  }
+
+  void _onControllerChangedForEditing() {
+    final opts = _controller.editingOptions;
+    final currentCols = _effectiveColumns;
+    final columnsChanged =
+        _lastColumns == null ||
+        _lastColumns!.length != currentCols.length ||
+        !listEquals(_lastColumns, currentCols);
+
+    if (_lastEditMode != opts.mode ||
+        _lastEditingRowIndex != _controller.editingRowIndex ||
+        _lastActionPos != opts.actionColumnPosition ||
+        _lastAllowUpdating != opts.allowUpdating ||
+        _lastAllowDeleting != opts.allowDeleting ||
+        columnsChanged) {
+      _lastEditMode = opts.mode;
+      _lastEditingRowIndex = _controller.editingRowIndex;
+      _lastActionPos = opts.actionColumnPosition;
+      _lastAllowUpdating = opts.allowUpdating;
+      _lastAllowDeleting = opts.allowDeleting;
+      _lastColumns = List.of(currentCols);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _fitController.columns.columns = _buildFitColumns();
+        }
+      });
+    }
+  }
+
+  List<FitGridColumn<Map<String, dynamic>>> _buildFitColumns() {
+    if (_controller.isPivotActive) {
+      return _controller.columns
+          .map((c) => _controller.buildFitGridColumn(c))
+          .toList();
+    }
+    final isReadonly = _controller.activeDynamicDatasource?.isReadonly ?? false;
+    final opts = _controller.editingOptions;
+    final isEditingEffective = opts.enabled && !isReadonly;
+    final isRowMode = isEditingEffective && opts.mode == FitGridPlusEditMode.row;
+    final isFormMode =
+        isEditingEffective && opts.mode == FitGridPlusEditMode.form;
+
+    final columns = _effectiveColumns.map((c) {
+      if (isRowMode && c.isEditable && !isReadonly) {
+        return _buildRowEditableColumn(c);
+      }
+      return _controller.buildFitGridColumn(c);
+    }).toList();
+
+    if (isEditingEffective &&
+        (isRowMode || isFormMode) &&
+        (opts.allowUpdating || opts.allowDeleting)) {
+      final actionCol = _buildActionColumn();
+      if (opts.actionColumnPosition == FitGridPlusActionColumnPosition.left) {
+        columns.insert(0, actionCol);
+      } else {
+        columns.add(actionCol);
+      }
+    }
+
+    return columns;
+  }
+
+  FitGridColumn<Map<String, dynamic>> _buildActionColumn() {
+    final isLeft =
+        _controller.editingOptions.actionColumnPosition ==
+        FitGridPlusActionColumnPosition.left;
+
+    return FitGridColumn<Map<String, dynamic>>(
+      id: '__actions__',
+      label: 'Actions',
+      width: const FitGridColumnWidth.fixed(100.0),
+      freeze: isLeft ? FitGridFreeze.start : FitGridFreeze.end,
+      resizable: false,
+      sortable: false,
+      reorderable: false,
+      hideable: false,
+      searchable: false,
+      alignment: FitGridAlignment.center,
+      value: (_) => '',
+      cellBuilder: (context, row, rowIndex) {
+        final isEditing =
+            _controller.isEditingRow && _controller.editingRowIndex == rowIndex;
+
+        if (isEditing) {
+          return Row(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Tooltip(
+                message: 'Save',
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(4),
+                  onTap: () async {
+                    final err = await _controller.saveEdit();
+                    if (err != null && context.mounted) {
+                      _showValidationErrorsDialog(context);
+                    }
+                  },
+                  child: const Padding(
+                    padding: EdgeInsets.all(4),
+                    child: Icon(Icons.check, size: 18, color: Colors.green),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 6),
+              Tooltip(
+                message: 'Cancel',
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(4),
+                  onTap: () {
+                    _controller.cancelEdit();
+                  },
+                  child: const Padding(
+                    padding: EdgeInsets.all(4),
+                    child: Icon(Icons.close, size: 18, color: Colors.red),
+                  ),
+                ),
+              ),
+            ],
+          );
+        }
+
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (_controller.editingOptions.allowUpdating)
+              Tooltip(
+                message: 'Edit',
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(4),
+                  onTap: () {
+                    if (_controller.editingOptions.mode ==
+                        FitGridPlusEditMode.form) {
+                      _controller.showEditDialog(context, rowIndex: rowIndex);
+                    } else {
+                      _controller.startEdit(rowIndex);
+                    }
+                  },
+                  child: const Padding(
+                    padding: EdgeInsets.all(4),
+                    child: Icon(Icons.edit_outlined, size: 18),
+                  ),
+                ),
+              ),
+            if (_controller.editingOptions.allowUpdating &&
+                _controller.editingOptions.allowDeleting)
+              const SizedBox(width: 6),
+            if (_controller.editingOptions.allowDeleting)
+              Tooltip(
+                message: 'Delete',
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(4),
+                  onTap: () async {
+                    if (await _confirmDelete(context)) {
+                      await _controller.deleteRow(rowIndex);
+                    }
+                  },
+                  child: const Padding(
+                    padding: EdgeInsets.all(4),
+                    child: Icon(
+                      Icons.delete_outline,
+                      size: 18,
+                      color: Colors.redAccent,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+
+  FitGridColumn<Map<String, dynamic>> _buildRowEditableColumn(
+    FitGridPlusColumn col,
+  ) {
+    final base = col.toFitGridColumn();
+    return base.copyWith(
+      cellBuilder: (context, row, rowIndex) {
+        final isEditingThisRow =
+            _controller.isEditingRow && _controller.editingRowIndex == rowIndex;
+        if (isEditingThisRow) {
+          return _buildInlineCellEditor(context, col);
+        }
+        if (col.cellBuilder != null) {
+          return col.cellBuilder!(context, row, rowIndex);
+        }
+        TextStyle? effectiveStyle;
+        if (col.cellStyle != null || col.cellColor != null) {
+          final val = row[col.field];
+          effectiveStyle = col.cellStyle?.call(val, row);
+          if (col.cellColor != null) {
+            final c = col.cellColor!(val, row);
+            if (c != null) {
+              effectiveStyle = (effectiveStyle ?? const TextStyle()).copyWith(
+                color: c,
+              );
+            }
+          }
+        }
+        return Text(
+          col.formatDisplayValue(row[col.field]),
+          style: effectiveStyle,
+          overflow: TextOverflow.ellipsis,
+        );
+      },
+    );
+  }
+
+  Widget _buildInlineCellEditor(BuildContext context, FitGridPlusColumn col) {
+    return ListenableBuilder(
+      listenable: _controller,
+      builder: (context, _) {
+        final val = _controller.draftRow?[col.field];
+        final error =
+            _controller.validationErrors[col.field] ?? col.validate(val);
+        final theme = Theme.of(context);
+        final isDark = theme.brightness == Brightness.dark;
+
+        Widget editor;
+
+        if (col.editorBuilder != null) {
+          final custom = col.editorBuilder!(
+            context,
+            val,
+            (newVal) => _controller.updateDraftValue(col.field, newVal),
+          );
+          editor = custom;
+        } else if (col.editorType == FitGridPlusEditorType.boolean ||
+            col.type == FitGridPlusColumnType.boolean) {
+          final boolVal = val == true;
+          editor = Center(
+            child: Checkbox(
+              value: boolVal,
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              onChanged: (v) => _controller.updateDraftValue(col.field, v),
+            ),
+          );
+        } else if (col.editorType == FitGridPlusEditorType.select ||
+            col.type == FitGridPlusColumnType.select) {
+          final options = <String>[];
+          if (col.selectOptions != null) {
+            options.addAll(col.selectOptions!);
+          } else if (col.editorOptions?['items'] is List) {
+            for (final item in col.editorOptions!['items'] as List) {
+              options.add(item.toString());
+            }
+          }
+          final currentStr = val?.toString();
+          final effectiveVal = options.contains(currentStr) ? currentStr : null;
+
+          editor = DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              isDense: true,
+              isExpanded: true,
+              value: effectiveVal,
+              style: TextStyle(
+                fontSize: 13,
+                color: isDark ? Colors.white : Colors.black87,
+              ),
+              items: options
+                  .map(
+                    (opt) => DropdownMenuItem(
+                      value: opt,
+                      child: Text(
+                        opt,
+                        style: const TextStyle(fontSize: 13),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  )
+                  .toList(),
+              onChanged: (v) => _controller.updateDraftValue(col.field, v),
+            ),
+          );
+        } else if (col.editorType == FitGridPlusEditorType.date ||
+            col.editorType == FitGridPlusEditorType.dateTime ||
+            col.type == FitGridPlusColumnType.date) {
+          final currentVal = val;
+          final isDateTime = col.editorType == FitGridPlusEditorType.dateTime;
+          String dateStr = '';
+          if (currentVal is DateTime) {
+            dateStr = isDateTime
+                ? DateFormat('yyyy-MM-dd HH:mm').format(currentVal)
+                : DateFormat('yyyy-MM-dd').format(currentVal);
+          } else if (currentVal != null) {
+            dateStr = currentVal.toString();
+          }
+
+          editor = InkWell(
+            onTap: () async {
+              DateTime initDate = DateTime.now();
+              if (currentVal is DateTime) {
+                initDate = currentVal;
+              } else if (currentVal != null) {
+                final p = DateTime.tryParse(currentVal.toString());
+                if (p != null) initDate = p;
+              }
+              final picked = await showDatePicker(
+                context: context,
+                initialDate: initDate,
+                firstDate: DateTime(1900),
+                lastDate: DateTime(2100),
+              );
+              if (picked != null) {
+                if (isDateTime) {
+                  if (!context.mounted) return;
+                  final pickedTime = await showTimePicker(
+                    context: context,
+                    initialTime: TimeOfDay.fromDateTime(initDate),
+                  );
+                  final dt = DateTime(
+                    picked.year,
+                    picked.month,
+                    picked.day,
+                    pickedTime?.hour ?? 0,
+                    pickedTime?.minute ?? 0,
+                  );
+                  final formatted = DateFormat('yyyy-MM-dd HH:mm').format(dt);
+                  _controller.updateDraftValue(col.field, formatted);
+                } else {
+                  final formatted = DateFormat('yyyy-MM-dd').format(picked);
+                  _controller.updateDraftValue(col.field, formatted);
+                }
+              }
+            },
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    dateStr.isNotEmpty ? dateStr : 'Select date',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: dateStr.isNotEmpty
+                          ? (isDark ? Colors.white : Colors.black87)
+                          : theme.hintColor,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                Icon(
+                  isDateTime
+                      ? Icons.access_time_outlined
+                      : Icons.calendar_today_outlined,
+                  size: 15,
+                  color: theme.colorScheme.primary,
+                ),
+              ],
+            ),
+          );
+        } else {
+          // Text / Number / Currency
+          final isNum =
+              col.editorType == FitGridPlusEditorType.number ||
+              col.type == FitGridPlusColumnType.number ||
+              col.editorType == FitGridPlusEditorType.currency ||
+              col.type == FitGridPlusColumnType.currency;
+
+          final initial = val?.toString() ?? '';
+
+          editor = TextFormField(
+            key: ValueKey('inline_${col.field}_${_controller.editingRowIndex}'),
+            initialValue: initial,
+            autofocus:
+                _controller.editingRowIndex != null &&
+                _effectiveColumns.indexWhere((c) => c.isEditable) ==
+                    _effectiveColumns.indexOf(col),
+            showCursor: true,
+            cursorColor: theme.colorScheme.primary,
+            cursorWidth: 1.5,
+            cursorRadius: const Radius.circular(1),
+            style: TextStyle(
+              fontSize: 13,
+              color: isDark ? Colors.white : Colors.black87,
+            ),
+            keyboardType: isNum
+                ? const TextInputType.numberWithOptions(
+                    decimal: true,
+                    signed: true,
+                  )
+                : TextInputType.text,
+            decoration: const InputDecoration(
+              isDense: true,
+              contentPadding: EdgeInsets.symmetric(horizontal: 2, vertical: 6),
+              border: InputBorder.none,
+              enabledBorder: InputBorder.none,
+              focusedBorder: InputBorder.none,
+              errorBorder: InputBorder.none,
+              disabledBorder: InputBorder.none,
+            ),
+            onChanged: (newText) {
+              if (isNum) {
+                final parsed = num.tryParse(
+                  newText.replaceAll(RegExp(r'[^0-9.-]'), ''),
+                );
+                _controller.updateDraftValue(
+                  col.field,
+                  parsed ?? (newText.isEmpty ? null : newText),
+                );
+              } else {
+                _controller.updateDraftValue(
+                  col.field,
+                  newText.isEmpty ? null : newText,
+                );
+              }
+            },
+          );
+        }
+
+        final cellBackground = error != null
+            ? Colors.red.withValues(alpha: isDark ? 0.2 : 0.08)
+            : (isDark
+                  ? theme.colorScheme.surfaceContainerHighest.withValues(
+                      alpha: 0.6,
+                    )
+                  : const Color(0xFFFBFDFF));
+
+        Widget styledCell = Listener(
+          behavior: HitTestBehavior.opaque,
+          onPointerDown: (_) {},
+          child: Focus(
+            child: Builder(
+              builder: (focusCtx) {
+                final isFocused = Focus.of(focusCtx).hasFocus;
+                final borderSideColor = error != null
+                    ? Colors.redAccent
+                    : isFocused
+                    ? theme.colorScheme.primary
+                    : (isDark ? Colors.white24 : Colors.grey.shade300);
+
+                return Container(
+                  width: double.infinity,
+                  height: double.infinity,
+                  alignment: Alignment.centerLeft,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: cellBackground,
+                    border: Border.all(
+                      color: borderSideColor,
+                      width: error != null || isFocused ? 1.5 : 1.0,
+                    ),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                  child: editor,
+                );
+              },
+            ),
+          ),
+        );
+
+        if (error != null) {
+          return Tooltip(
+            message: error,
+            preferBelow: false,
+            waitDuration: const Duration(milliseconds: 200),
+            decoration: BoxDecoration(
+              color: Colors.red.shade900,
+              borderRadius: BorderRadius.circular(4),
+            ),
+            textStyle: const TextStyle(color: Colors.white, fontSize: 11),
+            child: styledCell,
+          );
+        }
+
+        return styledCell;
+      },
+    );
+  }
+
+  void _onDataSourceChanged() {
+    _loadData();
+  }
+
+  FitGridEditTrigger get _editTrigger {
+    final opts = _controller.editingOptions;
+    return opts.enabled &&
+            opts.allowUpdating &&
+            opts.mode == FitGridPlusEditMode.cell
+        ? FitGridEditTrigger.singleTap
+        : FitGridEditTrigger.programmatic;
+  }
+
+  Future<void> _showValidationErrorsDialog(BuildContext context) async {
+    final errors = _controller.validationErrors;
+    if (errors.isEmpty) return;
+
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        titlePadding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        actionsPadding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+        title: Row(
+          children: [
+            const Icon(
+              Icons.error_outline_rounded,
+              color: Colors.redAccent,
+              size: 22,
+            ),
+            const SizedBox(width: 10),
+            Text(
+              'Validation Errors (${errors.length})',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: isDark ? Colors.white : Colors.black87,
+              ),
+            ),
+          ],
+        ),
+        content: SizedBox(
+          width: 380,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                'Please resolve the following errors before saving:',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: isDark ? Colors.white70 : Colors.black54,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Flexible(
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: errors.entries.map((entry) {
+                      final col = _effectiveColumns.firstWhere(
+                        (c) => c.field == entry.key,
+                        orElse: () => FitGridPlusColumn(
+                          field: entry.key,
+                          title: entry.key,
+                        ),
+                      );
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 6),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? Colors.red.withValues(alpha: 0.15)
+                              : const Color(0xFFFEF2F2),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(
+                            color: isDark
+                                ? Colors.redAccent.withValues(alpha: 0.3)
+                                : const Color(0xFFFECACA),
+                          ),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Padding(
+                              padding: EdgeInsets.only(top: 2),
+                              child: Icon(
+                                Icons.close_rounded,
+                                size: 14,
+                                color: Colors.redAccent,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: RichText(
+                                text: TextSpan(
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: isDark
+                                        ? Colors.white
+                                        : Colors.black87,
+                                  ),
+                                  children: [
+                                    TextSpan(
+                                      text: '${col.title}: ',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    TextSpan(
+                                      text: entry.value,
+                                      style: TextStyle(
+                                        color: isDark
+                                            ? Colors.red.shade200
+                                            : Colors.red.shade800,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          FilledButton(
+            style: FilledButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(6),
+              ),
+            ),
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<bool> _confirmDelete(BuildContext context) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+        title: const Text('Delete record'),
+        content: const Text('Are you sure you want to delete this record?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Colors.redAccent),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    return result ?? false;
+  }
+
+  Future<void> _loadData() async {
+    final isLocalData = widget.dataSource is LocalFitGridPlusDataSource;
+    if (!isLocalData && !_isLoading && mounted) {
+      setState(() => _isLoading = true);
+    }
+    final rows = await widget.dataSource.fetchRows();
+    if (mounted) {
+      setState(() {
+        _fitController.data.rows = rows;
+        _isLoading = false;
+      });
+      _restoreInitialSettingsIfNeeded();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final colorScheme = theme.colorScheme;
+
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    final effectiveTheme =
+        widget.theme ??
+        (widget.configuration is FitGridThemeData
+            ? widget.configuration as FitGridThemeData
+            : FitGridPlusTheme.createThemeFromContext(context));
+
+    final borderColor = isDark
+        ? colorScheme.outlineVariant.withAlpha(80)
+        : FitGridPlusTheme.borderColor;
+
+    return ListenableBuilder(
+      listenable: _controller,
+      builder: (context, _) {
+        return Material(
+          type: MaterialType.transparency,
+          child: Container(
+            decoration: BoxDecoration(
+              color: isDark
+                  ? colorScheme.surface
+                  : FitGridPlusTheme.backgroundLight,
+              border: Border.all(color: borderColor),
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Column(
+              children: [
+                if (widget.showToolbar)
+                  FitGridPlusToolbar(
+                    controller: _controller,
+                    onRefresh: _loadData,
+                    dynamicGrid: widget.dynamicGrid,
+                  ),
+                if (_controller.viewMode != FitGridPlusViewMode.card)
+                  FitGridPlusGroupPanel(controller: _controller),
+                Expanded(child: _buildBody(context, effectiveTheme, isDark)),
+                if (_controller.viewMode != FitGridPlusViewMode.card)
+                  _buildSelectionStatusBar(context),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildBody(
+    BuildContext context,
+    FitGridThemeData gridTheme,
+    bool isDark,
+  ) {
+    if (_controller.viewMode == FitGridPlusViewMode.card) {
+      return FitGridPlusCardView(
+        controller: _controller,
+        options: widget.cardViewOptions ?? const FitGridPlusCardViewOptions(),
+      );
+    }
+    return _buildGrid(context, gridTheme);
+  }
+
+  Widget _buildSelectionStatusBar(BuildContext context) {
+    if (!widget.cellSelection || !widget.showSelectionStatusBar) {
+      return const SizedBox.shrink();
+    }
+    final summary = _controller.calculateSelectedRangeSummary();
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    String fmt(num n) {
+      if (n == n.roundToDouble()) {
+        return NumberFormat('#,###').format(n);
+      }
+      return NumberFormat('#,##0.00').format(n);
+    }
+
+    final hasRange = summary != null && summary.cellCount > 1;
+
+    return Container(
+      height: 28,
+      padding: const EdgeInsets.symmetric(horizontal: 14),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E1E1E) : const Color(0xFFF8FAFC),
+        border: Border(
+          top: BorderSide(
+            color: isDark ? const Color(0xFF333333) : const Color(0xFFE2E8F0),
+          ),
+        ),
+      ),
+      child: hasRange
+          ? Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Icon(
+                  Icons.select_all_rounded,
+                  size: 14,
+                  color: theme.colorScheme.primary,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  '${summary.rowCount} × ${summary.columnCount} (${summary.cellCount} cells)',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: isDark
+                        ? const Color(0xFFDDDDDD)
+                        : const Color(0xFF1E293B),
+                  ),
+                ),
+                if (summary.numericCount > 0) ...[
+                  const SizedBox(width: 12),
+                  Container(
+                    height: 12,
+                    width: 1,
+                    color: isDark ? Colors.grey[700] : Colors.grey[300],
+                  ),
+                  const SizedBox(width: 12),
+                  if (summary.sum != null) ...[
+                    Text(
+                      'Sum: ${fmt(summary.sum!)}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: isDark
+                            ? const Color(0xFFEEEEEE)
+                            : const Color(0xFF0F172A),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                  ],
+                  if (summary.average != null) ...[
+                    Text(
+                      'Avg: ${fmt(summary.average!)}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: isDark
+                            ? const Color(0xFFAAAAAA)
+                            : const Color(0xFF64748B),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                  ],
+                  if (summary.min != null && summary.max != null) ...[
+                    Text(
+                      'Min: ${fmt(summary.min!)}  Max: ${fmt(summary.max!)}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: isDark
+                            ? const Color(0xFFAAAAAA)
+                            : const Color(0xFF64748B),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                  ],
+                ],
+                IconButton(
+                  icon: const Icon(Icons.copy_rounded, size: 13),
+                  tooltip: 'Copy range to clipboard (TSV)',
+                  splashRadius: 12,
+                  constraints: const BoxConstraints(
+                    minWidth: 20,
+                    minHeight: 20,
+                  ),
+                  padding: EdgeInsets.zero,
+                  onPressed: () async {
+                    final ok = await _controller.copySelectedRangeToClipboard();
+                    if (ok && context.mounted) {
+                      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'Selected range copied to clipboard (TSV)',
+                          ),
+                          duration: Duration(seconds: 1),
+                        ),
+                      );
+                    }
+                  },
+                ),
+              ],
+            )
+          : Row(
+              children: [
+                Text(
+                  'Ready',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: isDark
+                        ? const Color(0xFF888888)
+                        : const Color(0xFF94A3B8),
+                  ),
+                ),
+              ],
+            ),
+    );
+  }
+
+  Widget _buildGrid(BuildContext context, FitGridThemeData gridTheme) {
+    if (widget.dynamicGrid && (_fitController.columns.columns.isEmpty)) {
+      final theme = Theme.of(context);
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.table_chart_outlined,
+              size: 52,
+              color: theme.colorScheme.outline.withValues(alpha: 0.7),
+            ),
+            const SizedBox(height: 14),
+            Text(
+              'No table loaded yet',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Import a file (.xlsx, CSV, TSV, JSON) or click "+ New Datasource".',
+              style: TextStyle(fontSize: 13, color: theme.colorScheme.outline),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final isReadonly = _controller.activeDynamicDatasource?.isReadonly ?? false;
+    final effectiveEditTrigger =
+        (_controller.isPivotActive ||
+            isReadonly ||
+            !_controller.editingOptions.enabled)
+        ? FitGridEditTrigger.programmatic
+        : _editTrigger;
+
+    final gridWidget = FitGrid<Map<String, dynamic>>(
+      controller: _fitController,
+      theme: gridTheme,
+      cellSelection: widget.cellSelection,
+      enableCopy: widget.enableCopy,
+      enablePaste: widget.enablePaste,
+      rowColor: (row, rowIndex) {
+        if (widget.rowColor != null) {
+          final c = widget.rowColor!(row, rowIndex);
+          if (c != null) return c;
+        }
+        return _controller.resolveRowColor(row, rowIndex);
+      },
+      columnGroups: _controller.isPivotActive
+          ? _controller.pivotColumnGroups
+          : (widget.columnGroups ?? const <FitGridColumnGroup>[]),
+      showFilterRow:
+          !_controller.isPivotActive && _controller.showColumnFilterRow,
+      showColumnMenu: true,
+      contextMenuBuilder: _controller.contextMenuConfig.enabled
+          ? (context, target) {
+              final row = target.row;
+              if (row == null) return target.defaultItems;
+              return FitGridPlusContextMenu.buildMenuItems(
+                context: context,
+                controller: _controller,
+                row: row,
+                rowIndex: target.rowIndex,
+                columnField: target.columnId,
+                cellValue: target.columnId != null
+                    ? row[target.columnId]
+                    : null,
+                defaultItems: target.defaultItems,
+              );
+            }
+          : null,
+      columnMenuBuilder: (context, column, defaults) =>
+          _buildColumnMenu(context, column, defaults),
+      reorderableColumns: true,
+      resizableColumns: true,
+      multiSort: true,
+      editTrigger: effectiveEditTrigger,
+      paginated: widget.enablePagination || widget.pageSize != null,
+      pageSize: widget.pageSize ?? 40,
+      detailBuilder:
+          (!_controller.isPivotActive && _controller.isMasterDetailEnabled)
+          ? (context, row, rowIndex) {
+              final opts = _controller.masterDetailOptions;
+              return opts?.detailBuilder(context, row, rowIndex) ??
+                  const SizedBox.shrink();
+            }
+          : null,
+      detailRowHeight:
+          _controller.masterDetailOptions?.detailRowHeight ?? 360.0,
+      detailHeight: _controller.masterDetailOptions?.detailHeight,
+      rowKey: _controller.isMasterDetailEnabled
+          ? (row) => _controller.resolveRowKey(row)
+          : null,
+      onRowDoubleTap: (row, rowIndex) {
+        if (_controller.isPivotActive || isReadonly) return;
+        if (widget.onRowDoubleTap != null) {
+          widget.onRowDoubleTap!(row, rowIndex);
+        } else if (_controller.editingOptions.enabled &&
+            _controller.editingOptions.allowUpdating) {
+          if (_controller.editingOptions.mode == FitGridPlusEditMode.form) {
+            _controller.showEditDialog(context, rowIndex: rowIndex);
+          } else if (_controller.editingOptions.mode ==
+              FitGridPlusEditMode.row) {
+            _controller.startEdit(rowIndex);
+          }
+        }
+      },
+    );
+
+    if (_controller.isPivotActive &&
+        _controller.pivotConfig?.showChart == true &&
+        _controller.pivotChartData != null) {
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          final isWide = constraints.maxWidth >= 720;
+          final theme = Theme.of(context);
+          final isDark = theme.brightness == Brightness.dark;
+
+          if (isWide) {
+            final totalWidth = constraints.maxWidth;
+            const splitterWidth = 8.0;
+            final availableWidth = (totalWidth - splitterWidth).clamp(
+              0.0,
+              double.infinity,
+            );
+            const minGridWidth = 200.0;
+            const minChartWidth = 200.0;
+            final minRatio = availableWidth > (minGridWidth + minChartWidth)
+                ? (minGridWidth / availableWidth)
+                : 0.20;
+            final maxRatio = availableWidth > (minGridWidth + minChartWidth)
+                ? ((availableWidth - minChartWidth) / availableWidth)
+                : 0.80;
+
+            final effectiveRatio = _pivotSplitRatio.clamp(minRatio, maxRatio);
+            final gridWidth = availableWidth * effectiveRatio;
+            final chartWidth = (availableWidth - gridWidth).clamp(
+              0.0,
+              availableWidth,
+            );
+
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SizedBox(width: gridWidth, child: gridWidget),
+                MouseRegion(
+                  cursor: SystemMouseCursors.resizeColumn,
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onHorizontalDragStart: (details) {
+                      setState(() {
+                        _isDraggingSplitter = true;
+                        _splitDragStartPos = details.globalPosition.dx;
+                        _splitDragStartRatio = effectiveRatio;
+                      });
+                    },
+                    onHorizontalDragUpdate: (details) {
+                      if (_splitDragStartPos != null &&
+                          _splitDragStartRatio != null &&
+                          availableWidth > 0) {
+                        final dx =
+                            details.globalPosition.dx - _splitDragStartPos!;
+                        final newRatio =
+                            (_splitDragStartRatio! + (dx / availableWidth))
+                                .clamp(minRatio, maxRatio);
+                        setState(() {
+                          _pivotSplitRatio = newRatio;
+                        });
+                      }
+                    },
+                    onHorizontalDragEnd: (_) {
+                      setState(() {
+                        _isDraggingSplitter = false;
+                        _splitDragStartPos = null;
+                        _splitDragStartRatio = null;
+                      });
+                    },
+                    onHorizontalDragCancel: () {
+                      setState(() {
+                        _isDraggingSplitter = false;
+                        _splitDragStartPos = null;
+                        _splitDragStartRatio = null;
+                      });
+                    },
+                    child: Container(
+                      width: splitterWidth,
+                      decoration: BoxDecoration(
+                        color: _isDraggingSplitter
+                            ? (isDark
+                                  ? const Color(0xFF37373D)
+                                  : const Color(0xFFE2E8F0))
+                            : (isDark
+                                  ? const Color(0xFF252526)
+                                  : const Color(0xFFF1F5F9)),
+                        border: Border(
+                          left: BorderSide(
+                            color: _isDraggingSplitter
+                                ? theme.colorScheme.primary.withValues(
+                                    alpha: 0.5,
+                                  )
+                                : (isDark
+                                      ? const Color(0xFF333333)
+                                      : const Color(0xFFE2E8F0)),
+                          ),
+                          right: BorderSide(
+                            color: _isDraggingSplitter
+                                ? theme.colorScheme.primary.withValues(
+                                    alpha: 0.5,
+                                  )
+                                : (isDark
+                                      ? const Color(0xFF333333)
+                                      : const Color(0xFFE2E8F0)),
+                          ),
+                        ),
+                      ),
+                      child: Center(
+                        child: Container(
+                          width: 2,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: _isDraggingSplitter
+                                ? theme.colorScheme.primary
+                                : (isDark
+                                      ? Colors.grey[600]
+                                      : Colors.grey[400]),
+                            borderRadius: BorderRadius.circular(1),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  width: chartWidth,
+                  child: FitGridPlusPivotChart(
+                    data: _controller.pivotChartData!,
+                    chartType: _controller.pivotConfig!.chartType,
+                    onChartTypeChanged: (type) =>
+                        _controller.setPivotChartType(type),
+                    onClose: () => _controller.togglePivotChart(false),
+                  ),
+                ),
+              ],
+            );
+          } else {
+            final totalHeight = constraints.maxHeight;
+            const splitterHeight = 8.0;
+            final availableHeight = (totalHeight - splitterHeight).clamp(
+              0.0,
+              double.infinity,
+            );
+            const minGridHeight = 140.0;
+            const minChartHeight = 140.0;
+            final minRatio = availableHeight > (minGridHeight + minChartHeight)
+                ? (minGridHeight / availableHeight)
+                : 0.20;
+            final maxRatio = availableHeight > (minGridHeight + minChartHeight)
+                ? ((availableHeight - minChartHeight) / availableHeight)
+                : 0.80;
+
+            final effectiveRatio = _pivotSplitRatio.clamp(minRatio, maxRatio);
+            final gridHeight = availableHeight * effectiveRatio;
+            final chartHeight = (availableHeight - gridHeight).clamp(
+              0.0,
+              availableHeight,
+            );
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SizedBox(height: gridHeight, child: gridWidget),
+                MouseRegion(
+                  cursor: SystemMouseCursors.resizeRow,
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onVerticalDragStart: (details) {
+                      setState(() {
+                        _isDraggingSplitter = true;
+                        _splitDragStartPos = details.globalPosition.dy;
+                        _splitDragStartRatio = effectiveRatio;
+                      });
+                    },
+                    onVerticalDragUpdate: (details) {
+                      if (_splitDragStartPos != null &&
+                          _splitDragStartRatio != null &&
+                          availableHeight > 0) {
+                        final dy =
+                            details.globalPosition.dy - _splitDragStartPos!;
+                        final newRatio =
+                            (_splitDragStartRatio! + (dy / availableHeight))
+                                .clamp(minRatio, maxRatio);
+                        setState(() {
+                          _pivotSplitRatio = newRatio;
+                        });
+                      }
+                    },
+                    onVerticalDragEnd: (_) {
+                      setState(() {
+                        _isDraggingSplitter = false;
+                        _splitDragStartPos = null;
+                        _splitDragStartRatio = null;
+                      });
+                    },
+                    onVerticalDragCancel: () {
+                      setState(() {
+                        _isDraggingSplitter = false;
+                        _splitDragStartPos = null;
+                        _splitDragStartRatio = null;
+                      });
+                    },
+                    child: Container(
+                      height: splitterHeight,
+                      decoration: BoxDecoration(
+                        color: _isDraggingSplitter
+                            ? (isDark
+                                  ? const Color(0xFF37373D)
+                                  : const Color(0xFFE2E8F0))
+                            : (isDark
+                                  ? const Color(0xFF252526)
+                                  : const Color(0xFFF1F5F9)),
+                        border: Border(
+                          top: BorderSide(
+                            color: _isDraggingSplitter
+                                ? theme.colorScheme.primary.withValues(
+                                    alpha: 0.5,
+                                  )
+                                : (isDark
+                                      ? const Color(0xFF333333)
+                                      : const Color(0xFFE2E8F0)),
+                          ),
+                          bottom: BorderSide(
+                            color: _isDraggingSplitter
+                                ? theme.colorScheme.primary.withValues(
+                                    alpha: 0.5,
+                                  )
+                                : (isDark
+                                      ? const Color(0xFF333333)
+                                      : const Color(0xFFE2E8F0)),
+                          ),
+                        ),
+                      ),
+                      child: Center(
+                        child: Container(
+                          width: 36,
+                          height: 2,
+                          decoration: BoxDecoration(
+                            color: _isDraggingSplitter
+                                ? theme.colorScheme.primary
+                                : (isDark
+                                      ? Colors.grey[600]
+                                      : Colors.grey[400]),
+                            borderRadius: BorderRadius.circular(1),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  height: chartHeight,
+                  child: FitGridPlusPivotChart(
+                    data: _controller.pivotChartData!,
+                    chartType: _controller.pivotConfig!.chartType,
+                    onChartTypeChanged: (type) =>
+                        _controller.setPivotChartType(type),
+                    onClose: () => _controller.togglePivotChart(false),
+                  ),
+                ),
+              ],
+            );
+          }
+        },
+      );
+    }
+
+    return gridWidget;
+  }
+
+  List<PopupMenuEntry<void>> _buildColumnMenu(
+    BuildContext context,
+    FitGridColumn<Map<String, dynamic>> column,
+    List<PopupMenuEntry<void>> defaults,
+  ) {
+    if (column.id == '__actions__') {
+      final isLeft =
+          _controller.editingOptions.actionColumnPosition ==
+          FitGridPlusActionColumnPosition.left;
+      PopupMenuItem<void> pinItem(
+        String label,
+        IconData icon,
+        FitGridPlusActionColumnPosition pos,
+        bool enabled,
+      ) => PopupMenuItem<void>(
+        enabled: enabled,
+        onTap: () => _controller.setEditingOptions(
+          _controller.editingOptions.copyWith(actionColumnPosition: pos),
+        ),
+        child: Row(
+          children: [
+            SizedBox(width: 28, child: Icon(icon, size: 18)),
+            Text(label),
+          ],
+        ),
+      );
+      return [
+        pinItem(
+          'Pin to start',
+          Icons.keyboard_double_arrow_left,
+          FitGridPlusActionColumnPosition.left,
+          !isLeft,
+        ),
+        pinItem(
+          'Pin to end',
+          Icons.keyboard_double_arrow_right,
+          FitGridPlusActionColumnPosition.right,
+          isLeft,
+        ),
+      ];
+    }
+    final isGrouped = _controller.activeGrouping.contains(column.id);
+    final groupItem = PopupMenuItem<void>(
+      onTap: () {
+        if (isGrouped) {
+          _controller.removeGroup(column.id);
+        } else {
+          _controller.addGroup(column.id);
+        }
+      },
+      child: Row(
+        children: [
+          SizedBox(
+            width: 28,
+            child: Icon(
+              isGrouped ? Icons.layers_clear_outlined : Icons.layers_outlined,
+              size: 18,
+            ),
+          ),
+          Flexible(
+            child: Text(
+              isGrouped
+                  ? 'Ungroup by ${column.label}'
+                  : 'Group by ${column.label}',
+            ),
+          ),
+        ],
+      ),
+    );
+
+    final entries = <PopupMenuEntry<void>>[groupItem];
+
+    // Column Editor dialog for dynamic grid (enabled only for not read-only grid)
+    final activeDynamic = _controller.activeDynamicDatasource;
+    final isDynamic = widget.dynamicGrid || activeDynamic != null;
+    final isNotReadonly = activeDynamic == null
+        ? true
+        : !activeDynamic.isReadonly;
+
+    if (isDynamic && isNotReadonly) {
+      entries.add(
+        PopupMenuItem<void>(
+          onTap: () {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              _controller.showColumnEditorDialog(context, field: column.id);
+            });
+          },
+          child: Row(
+            children: [
+              const SizedBox(
+                width: 28,
+                child: Icon(Icons.tune_rounded, size: 18),
+              ),
+              Flexible(child: Text('Edit Column "${column.label}"')),
+            ],
+          ),
+        ),
+      );
+      entries.add(
+        PopupMenuItem<void>(
+          onTap: () {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              _controller.showColumnsEditorDialog(context);
+            });
+          },
+          child: const Row(
+            children: [
+              SizedBox(
+                width: 28,
+                child: Icon(Icons.view_column_rounded, size: 18),
+              ),
+              Flexible(child: Text('Edit All Columns...')),
+            ],
+          ),
+        ),
+      );
+    }
+
+    entries.add(const PopupMenuDivider());
+    entries.addAll(defaults);
+    return entries;
+  }
+}
