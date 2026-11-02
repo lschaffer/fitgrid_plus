@@ -41,3 +41,4 @@ data:
   - {"server_id": "SRV-1005", "hostname": "ap-south-worker-01", "region": "ap-south-1", "status": "Active", "cpu_cores": 32, "memory_gb": 128, "monthly_cost": 490.0}
   - {"server_id": "SRV-1006", "hostname": "ap-south-gateway-01", "region": "ap-south-1", "status": "Active", "cpu_cores": 8, "memory_gb": 32, "monthly_cost": 180.0}
   - {"server_id": "SRV-1007", "hostname": "sa-east-backup-01", "region": "sa-east-1", "status": "Standby", "cpu_cores": 16, "memory_gb": 64, "monthly_cost": 290.0}
+

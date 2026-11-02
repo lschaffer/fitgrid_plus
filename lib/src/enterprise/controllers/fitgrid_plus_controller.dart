@@ -1659,14 +1659,7 @@ class FitGridPlusController extends ChangeNotifier {
       } else {
         _fitController!.grouping.groups = fields.map((f) {
           final actual = _resolveField(f) ?? f;
-          final col = _columns
-              .where(
-                (c) =>
-                    c.field == actual ||
-                    c.field.toLowerCase() == actual.toLowerCase() ||
-                    c.title.toLowerCase() == actual.toLowerCase(),
-              )
-              .firstOrNull;
+          final col = _columns.where((c) => c.field == actual).firstOrNull;
           final title = col?.title ?? actual;
           return FitGridGroup<Map<String, dynamic>>(
             keyOf: (row) => row[actual]?.toString() ?? '',

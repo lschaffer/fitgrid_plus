@@ -10,3 +10,4 @@
 | CLUS-SYD-01 | Sydney South | 24 | 590 | 60.0 | Warning | 99.75% |
 | CLUS-SIN-01 | Singapore Central | 36 | 940 | 110.0 | Healthy | 99.96% |
 | CLUS-LON-02 | London Docklands | 50 | 1310 | 160.0 | Healthy | 99.99% |
+
