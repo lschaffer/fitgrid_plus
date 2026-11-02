@@ -146,7 +146,10 @@ class _ExcelImportExamplePageState extends State<ExcelImportExamplePage> {
                       dataSource: LocalFitGridPlusDataSource(
                         columns: _controller.columns,
                         initialData: _controller.rows,
+                        isReadonly: true,
                       ),
+                      editingOptions:
+                          const FitGridPlusEditingOptions(enabled: false),
                       showToolbar: true,
                       cellSelection: true,
                       showSelectionStatusBar: true,

@@ -9,6 +9,9 @@ abstract class FitGridPlusDataSource with ChangeNotifier {
   /// Column definitions for the grid.
   List<FitGridPlusColumn> get columns;
 
+  /// Whether this data source is strictly read-only.
+  bool get isReadonly => false;
+
   /// Total count of rows across all pages (or currently loaded rows).
   int get totalRowCount;
 
@@ -23,11 +26,16 @@ abstract class FitGridPlusDataSource with ChangeNotifier {
 class LocalFitGridPlusDataSource extends FitGridPlusDataSource {
   @override
   final List<FitGridPlusColumn> columns;
+
+  @override
+  final bool isReadonly;
+
   List<Map<String, dynamic>> _data;
 
   LocalFitGridPlusDataSource({
     required this.columns,
     required List<Map<String, dynamic>> initialData,
+    this.isReadonly = false,
   }) : _data = List<Map<String, dynamic>>.from(initialData);
 
   @override

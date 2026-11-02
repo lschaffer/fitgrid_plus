@@ -124,7 +124,9 @@ class FitGridPlusContextMenu {
     }
 
     // 3. Row Editing Actions
-    if (config.enableEditingActions && controller.editingOptions.enabled) {
+    if (!controller.isReadonly &&
+        config.enableEditingActions &&
+        controller.editingOptions.enabled) {
       if (items.isNotEmpty) items.add(const PopupMenuDivider(height: 8));
       if (controller.editingOptions.allowUpdating) {
         items.add(

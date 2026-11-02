@@ -211,6 +211,7 @@ class _DataAuditorExamplePageState extends State<DataAuditorExamplePage> {
               child: FitGridPlus(
                 controller: _controller,
                 dataSource: _controller.dataSource!,
+                editingOptions: const FitGridPlusEditingOptions(enabled: false),
                 showToolbar: true,
                 cellSelection: true,
               ),

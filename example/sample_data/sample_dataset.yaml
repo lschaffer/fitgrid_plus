@@ -1,0 +1,43 @@
+metadata:
+  title: Cloud Infrastructure Fleet Inventory
+  description: High-availability datacenter server metrics and cost monitoring
+model:
+  id: cloud_fleet_inventory
+  title: Cloud Infrastructure Fleet Inventory
+  columns:
+    - field: server_id
+      title: Server ID
+      type: text
+      width: 140
+    - field: hostname
+      title: Hostname
+      type: text
+      width: 180
+    - field: region
+      title: Cloud Region
+      type: text
+      width: 150
+    - field: status
+      title: Health Status
+      type: text
+      width: 140
+    - field: cpu_cores
+      title: CPU Cores
+      type: number
+      width: 120
+    - field: memory_gb
+      title: RAM (GB)
+      type: number
+      width: 120
+    - field: monthly_cost
+      title: Monthly Cost ($)
+      type: currency
+      width: 160
+data:
+  - {"server_id": "SRV-1001", "hostname": "us-east-web-01", "region": "us-east-1", "status": "Active", "cpu_cores": 16, "memory_gb": 64, "monthly_cost": 240.0}
+  - {"server_id": "SRV-1002", "hostname": "us-east-db-01", "region": "us-east-1", "status": "Active", "cpu_cores": 64, "memory_gb": 256, "monthly_cost": 980.0}
+  - {"server_id": "SRV-1003", "hostname": "eu-west-web-01", "region": "eu-west-1", "status": "Active", "cpu_cores": 16, "memory_gb": 64, "monthly_cost": 260.0}
+  - {"server_id": "SRV-1004", "hostname": "eu-west-cache-01", "region": "eu-west-1", "status": "Maintenance", "cpu_cores": 32, "memory_gb": 128, "monthly_cost": 520.0}
+  - {"server_id": "SRV-1005", "hostname": "ap-south-worker-01", "region": "ap-south-1", "status": "Active", "cpu_cores": 32, "memory_gb": 128, "monthly_cost": 490.0}
+  - {"server_id": "SRV-1006", "hostname": "ap-south-gateway-01", "region": "ap-south-1", "status": "Active", "cpu_cores": 8, "memory_gb": 32, "monthly_cost": 180.0}
+  - {"server_id": "SRV-1007", "hostname": "sa-east-backup-01", "region": "sa-east-1", "status": "Standby", "cpu_cores": 16, "memory_gb": 64, "monthly_cost": 290.0}

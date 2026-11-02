@@ -565,8 +565,7 @@ class _FitGridPlusToolbarState extends State<FitGridPlusToolbar> {
     ColorScheme colorScheme,
     Color borderCol,
   ) {
-    final isReadonly =
-        widget.controller.activeDynamicDatasource?.isReadonly ?? false;
+    final isReadonly = widget.controller.isReadonly;
 
     return Row(
       children: [

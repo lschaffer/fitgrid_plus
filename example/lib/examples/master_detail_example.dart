@@ -111,7 +111,11 @@ class _MasterDetailExamplePageState extends State<MasterDetailExamplePage> {
       },
     ];
 
-    _dataSource = LocalFitGridPlusDataSource(columns: columns, initialData: rows);
+    _dataSource = LocalFitGridPlusDataSource(
+      columns: columns,
+      initialData: rows,
+      isReadonly: true,
+    );
   }
 
   @override
@@ -187,6 +191,7 @@ class _MasterDetailExamplePageState extends State<MasterDetailExamplePage> {
           Expanded(
             child: FitGridPlus(
               dataSource: childSource,
+              editingOptions: const FitGridPlusEditingOptions(enabled: false),
               showToolbar: false,
               cellSelection: false,
             ),
@@ -227,6 +232,7 @@ class _MasterDetailExamplePageState extends State<MasterDetailExamplePage> {
               child: FitGridPlus(
                 controller: _controller,
                 dataSource: _dataSource,
+                editingOptions: const FitGridPlusEditingOptions(enabled: false),
                 showToolbar: true,
                 masterDetailOptions: FitGridPlusMasterDetailOptions(
                   rowKey: (row) => row['order_id'] as Object,

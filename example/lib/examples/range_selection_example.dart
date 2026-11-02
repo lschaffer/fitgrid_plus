@@ -160,7 +160,11 @@ class _RangeSelectionExamplePageState extends State<RangeSelectionExamplePage> {
       },
     ];
 
-    _dataSource = LocalFitGridPlusDataSource(columns: columns, initialData: rows);
+    _dataSource = LocalFitGridPlusDataSource(
+      columns: columns,
+      initialData: rows,
+      isReadonly: true,
+    );
   }
 
   @override
@@ -245,6 +249,7 @@ class _RangeSelectionExamplePageState extends State<RangeSelectionExamplePage> {
               child: FitGridPlus(
                 controller: _controller,
                 dataSource: _dataSource,
+                editingOptions: const FitGridPlusEditingOptions(enabled: false),
                 showToolbar: true,
                 cellSelection: true,
                 showSelectionStatusBar: true,

@@ -105,7 +105,9 @@ class _ConditionalFormattingExamplePageState
         field: 'trend',
         title: '6-Month Trend',
         width: 140,
-        type: FitGridPlusColumnType.sparkline,
+        type: _showSparklines
+            ? FitGridPlusColumnType.sparkline
+            : FitGridPlusColumnType.text,
         visual: _showSparklines
             ? FitGridPlusColumn.sparkline(
                 valuesOf: (row) {
@@ -187,7 +189,18 @@ class _ConditionalFormattingExamplePageState
       },
     ];
 
-    _dataSource = LocalFitGridPlusDataSource(columns: columns, initialData: rows);
+    _dataSource = LocalFitGridPlusDataSource(
+      columns: columns,
+      initialData: rows,
+      isReadonly: true,
+    );
+    if (_controller.isAttached) {
+      _controller.attach(
+        columns: columns,
+        dataSource: _dataSource,
+        notify: true,
+      );
+    }
   }
 
   @override
@@ -251,7 +264,10 @@ class _ConditionalFormattingExamplePageState
                       label: const Text('Highlight Loss'),
                       selected: _showRowHighlights,
                       onSelected: (bool val) {
-                        setState(() => _showRowHighlights = val);
+                        setState(() {
+                          _showRowHighlights = val;
+                          _setupGrid();
+                        });
                       },
                     ),
                   ],
@@ -260,8 +276,10 @@ class _ConditionalFormattingExamplePageState
             ),
             Expanded(
               child: FitGridPlus(
+                key: ValueKey('$_showDataBars-$_showSparklines-$_showRowHighlights'),
                 controller: _controller,
                 dataSource: _dataSource,
+                editingOptions: const FitGridPlusEditingOptions(enabled: false),
                 showToolbar: true,
                 cellSelection: true,
                 rowColor: _showRowHighlights

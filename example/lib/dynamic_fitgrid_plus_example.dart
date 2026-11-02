@@ -33,6 +33,41 @@ EMP-105,Evan Wright,Product,110000,2022-11-05,false
 EMP-106,Fiona Gallagher,Human Resources,78000,2021-09-20,true
 EMP-107,George Clark,Finance,118000,2019-08-12,true''';
 
+  static const String _sampleYaml = '''metadata:
+  title: Cloud Infrastructure Fleet
+model:
+  id: cloud_fleet
+  title: Cloud Infrastructure Fleet
+  columns:
+    - field: server_id
+      title: Server ID
+      type: text
+    - field: hostname
+      title: Hostname
+      type: text
+    - field: region
+      title: Cloud Region
+      type: text
+    - field: status
+      title: Health Status
+      type: text
+    - field: cpu_cores
+      title: Cores
+      type: number
+    - field: memory_gb
+      title: RAM (GB)
+      type: number
+    - field: monthly_cost
+      title: Cost (\$)
+      type: currency
+data:
+  - {"server_id": "SRV-1001", "hostname": "us-east-web-01", "region": "us-east-1", "status": "Active", "cpu_cores": 16, "memory_gb": 64, "monthly_cost": 240.0}
+  - {"server_id": "SRV-1002", "hostname": "us-east-db-01", "region": "us-east-1", "status": "Active", "cpu_cores": 64, "memory_gb": 256, "monthly_cost": 980.0}
+  - {"server_id": "SRV-1003", "hostname": "eu-west-web-01", "region": "eu-west-1", "status": "Active", "cpu_cores": 16, "memory_gb": 64, "monthly_cost": 260.0}
+  - {"server_id": "SRV-1004", "hostname": "eu-west-cache-01", "region": "eu-west-1", "status": "Maintenance", "cpu_cores": 32, "memory_gb": 128, "monthly_cost": 520.0}
+  - {"server_id": "SRV-1005", "hostname": "ap-south-worker-01", "region": "ap-south-1", "status": "Active", "cpu_cores": 32, "memory_gb": 128, "monthly_cost": 490.0}
+''';
+
   @override
   void initState() {
     super.initState();
@@ -46,7 +81,11 @@ EMP-107,George Clark,Finance,118000,2019-08-12,true''';
         .map((c) => c.toFitGridPlusColumn())
         .toList();
 
-    final ds = LocalFitGridPlusDataSource(columns: columns, initialData: parsed.rows);
+    final ds = LocalFitGridPlusDataSource(
+      columns: columns,
+      initialData: parsed.rows,
+      isReadonly: true,
+    );
     _controller.attach(columns: columns, dataSource: ds);
   }
 
@@ -67,13 +106,33 @@ EMP-107,George Clark,Finance,118000,2019-08-12,true''';
       final columns = parsed.columns
           .map((c) => c.toFitGridPlusColumn())
           .toList();
-      final ds = LocalFitGridPlusDataSource(columns: columns, initialData: parsed.rows);
+      final ds = LocalFitGridPlusDataSource(
+        columns: columns,
+        initialData: parsed.rows,
+        isReadonly: true,
+      );
       _controller.attach(columns: columns, dataSource: ds);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Loaded Markdown Server Metrics table!')),
         );
       }
+    }
+  }
+
+  void _loadYamlSample() {
+    final bundle = FitGridPlusDynamicBundle.fromYamlString(_sampleYaml);
+    final columns = bundle.model.toColumns();
+    final ds = LocalFitGridPlusDataSource(
+      columns: columns,
+      initialData: bundle.rows,
+      isReadonly: true,
+    );
+    _controller.attach(columns: columns, dataSource: ds);
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Loaded YAML Cloud Fleet table!')),
+      );
     }
   }
 
@@ -124,11 +183,10 @@ EMP-107,George Clark,Finance,118000,2019-08-12,true''';
                       onPressed: _loadMarkdownSample,
                     ),
                     const SizedBox(width: 8),
-                    FilledButton.icon(
-                      icon: const Icon(Icons.manage_history, size: 16),
-                      label: const Text('Datasource Manager'),
-                      onPressed: () =>
-                          FitGridPlusDatasourceManagerDialog.show(context, _controller),
+                    FilledButton.tonalIcon(
+                      icon: const Icon(Icons.data_object_outlined, size: 16),
+                      label: const Text('Load YAML Sample'),
+                      onPressed: _loadYamlSample,
                     ),
                   ],
                 ),
@@ -138,7 +196,12 @@ EMP-107,George Clark,Finance,118000,2019-08-12,true''';
               child: FitGridPlus(
                 controller: _controller,
                 dataSource: _controller.dataSource ??
-                    LocalFitGridPlusDataSource(columns: const [], initialData: const []),
+                    LocalFitGridPlusDataSource(
+                      columns: const [],
+                      initialData: const [],
+                      isReadonly: true,
+                    ),
+                editingOptions: const FitGridPlusEditingOptions(enabled: false),
                 showToolbar: true,
                 dynamicGrid: true,
                 cellSelection: true,

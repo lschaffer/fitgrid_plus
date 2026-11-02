@@ -143,6 +143,12 @@ class FitGridPlusController extends ChangeNotifier {
   Map<String, String> get validationErrors =>
       Map.unmodifiable(_validationErrors);
 
+  /// Whether the active grid dataset is read-only.
+  bool get isReadonly =>
+      (_activeDynamicDatasource?.isReadonly ?? false) ||
+      (_dataSource?.isReadonly ?? false) ||
+      !_editingOptions.enabled;
+
   /// Updates the editing options and notifies listeners.
   void setEditingOptions(
     FitGridPlusEditingOptions options, {
@@ -239,6 +245,9 @@ class FitGridPlusController extends ChangeNotifier {
     FitGridPlusColumn col,
   ) {
     var effectiveCol = col;
+    if (isReadonly) {
+      effectiveCol = effectiveCol.copyWith(isEditable: false);
+    }
     final fieldFormats = _conditionalFormats
         .where((f) => f.field == col.field)
         .toList();
@@ -321,7 +330,7 @@ class FitGridPlusController extends ChangeNotifier {
 
   /// Starts adding a new row, initializing draft values with column defaults or [initialValues].
   void startAdd([Map<String, dynamic>? initialValues]) {
-    if (_activeDynamicDatasource?.isReadonly == true) return;
+    if (isReadonly) return;
     _discardPendingRow();
     _editingRowIndex = null;
     _isAddingRow = true;
@@ -368,7 +377,7 @@ class FitGridPlusController extends ChangeNotifier {
   void startEditingRow(int rowIndex) => startEdit(rowIndex);
 
   void startEdit(int rowIndex) {
-    if (_activeDynamicDatasource?.isReadonly == true) return;
+    if (isReadonly) return;
     if (_fitController == null) return;
     final removedAt = _discardPendingRow();
     if (removedAt >= 0 && removedAt < rowIndex) rowIndex--;
@@ -398,7 +407,7 @@ class FitGridPlusController extends ChangeNotifier {
     Map<String, dynamic>? initialValues,
     String? title,
   }) {
-    if (_activeDynamicDatasource?.isReadonly == true) {
+    if (isReadonly) {
       return Future.value(false);
     }
     if (rowIndex != null) {
@@ -587,7 +596,7 @@ class FitGridPlusController extends ChangeNotifier {
 
   /// Deletes a row at [rowIndex] after running beforeDelete guard.
   Future<bool> deleteRow(int rowIndex) async {
-    if (_activeDynamicDatasource?.isReadonly == true) return false;
+    if (isReadonly) return false;
     if (_fitController == null) return false;
     final viewRows = _fitController!.data.view;
     if (rowIndex < 0 || rowIndex >= viewRows.length) return false;

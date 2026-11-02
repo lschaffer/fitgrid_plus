@@ -34,29 +34,16 @@ class _MobileCardViewExamplePageState extends State<MobileCardViewExamplePage> {
     final columns = SampleSalesData.superstoreColumns;
     final rows = SampleSalesData.generateSuperstore1000(count: 100);
 
-    _dataSource = LocalFitGridPlusDataSource(columns: columns, initialData: rows);
+    _dataSource = LocalFitGridPlusDataSource(
+      columns: columns,
+      initialData: rows,
+      isReadonly: true,
+    );
     _controller.setViewMode(FitGridPlusViewMode.card);
 
     _controller.setEditingOptions(
-      FitGridPlusEditingOptions(
-        enabled: true,
-        mode: FitGridPlusEditMode.form,
-        allowUpdating: true,
-        allowDeleting: true,
-        afterSave: (row) {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Updated Order ${row['OrderID']}')),
-            );
-          }
-        },
-        afterDelete: (row) {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Deleted Order ${row['OrderID']}')),
-            );
-          }
-        },
+      const FitGridPlusEditingOptions(
+        enabled: false,
       ),
     );
   }
@@ -118,6 +105,7 @@ class _MobileCardViewExamplePageState extends State<MobileCardViewExamplePage> {
               child: FitGridPlus(
                 controller: _controller,
                 dataSource: _dataSource,
+                editingOptions: const FitGridPlusEditingOptions(enabled: false),
                 showToolbar: true,
                 cardViewOptions: const FitGridPlusCardViewOptions(
                   titleField: 'OrderID',

@@ -389,7 +389,7 @@ class _FitGridPlusState extends State<FitGridPlus> {
           .map((c) => _controller.buildFitGridColumn(c))
           .toList();
     }
-    final isReadonly = _controller.activeDynamicDatasource?.isReadonly ?? false;
+    final isReadonly = _controller.isReadonly;
     final opts = _controller.editingOptions;
     final isEditingEffective = opts.enabled && !isReadonly;
     final isRowMode = isEditingEffective && opts.mode == FitGridPlusEditMode.row;
@@ -1253,7 +1253,7 @@ class _FitGridPlusState extends State<FitGridPlus> {
       );
     }
 
-    final isReadonly = _controller.activeDynamicDatasource?.isReadonly ?? false;
+    final isReadonly = _controller.isReadonly;
     final effectiveEditTrigger =
         (_controller.isPivotActive ||
             isReadonly ||
@@ -1679,9 +1679,7 @@ class _FitGridPlusState extends State<FitGridPlus> {
     // Column Editor dialog for dynamic grid (enabled only for not read-only grid)
     final activeDynamic = _controller.activeDynamicDatasource;
     final isDynamic = widget.dynamicGrid || activeDynamic != null;
-    final isNotReadonly = activeDynamic == null
-        ? true
-        : !activeDynamic.isReadonly;
+    final isNotReadonly = !_controller.isReadonly;
 
     if (isDynamic && isNotReadonly) {
       entries.add(
