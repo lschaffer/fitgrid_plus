@@ -612,6 +612,18 @@ class _FitGridPlusToolbarState extends State<FitGridPlusToolbar> {
           tooltip: 'Toggle Filter Row',
           onPressed: widget.controller.toggleColumnFilterRow,
         ),
+        if (widget.controller.activeFilters.isNotEmpty)
+          IconButton(
+            icon: Icon(
+              Icons.filter_alt_off_outlined,
+              size: 20,
+              color: colorScheme.error,
+            ),
+            tooltip: 'Clear All Active Filters',
+            onPressed: () {
+              widget.controller.clearAllFilters();
+            },
+          ),
         IconButton(
           icon: Icon(
             widget.controller.viewMode == FitGridPlusViewMode.card

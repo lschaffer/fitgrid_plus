@@ -2,6 +2,10 @@
 
 A high-performance, enterprise-grade virtualized canvas **DataGrid** for Flutter with **zero AI/LLM/MCP overhead**.
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/lschaffer/fitgrid_plus/main/fitgrid_plus_example.gif" alt="FitGrid Plus Enterprise DataGrid Demo" width="100%" />
+</p>
+
 `fitgrid_plus` couples a high-speed custom canvas rendering engine (`fitgrid_table`) with a comprehensive enterprise productivity suite: DevExtreme-style editing (cell, row, modal form), dynamic Pivot Grids with banded column headers and split canvas charts, multi-level hierarchical grouping, pure Dart Excel (.xlsx) import & export, responsive mobile card feed with swipe actions, rectangular range selection with instant statistical summaries, and deterministic data quality auditing.
 
 ---

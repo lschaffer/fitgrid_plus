@@ -171,10 +171,19 @@ class FitGridPlusGroupPanel extends StatelessWidget {
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               ...groups.map((field) {
-                final col = controller.columns.firstWhere(
-                  (c) => c.field == field,
-                  orElse: () => controller.columns.first,
-                );
+                final col = controller.columns
+                    .where(
+                      (c) =>
+                          c.field == field ||
+                          c.field.toLowerCase() == field.toLowerCase() ||
+                          c.title.toLowerCase() == field.toLowerCase(),
+                    )
+                    .firstOrNull ??
+                    FitGridPlusColumn(
+                      field: field,
+                      title: field,
+                      type: FitGridPlusColumnType.text,
+                    );
 
                 return Container(
                   padding: const EdgeInsets.only(
@@ -214,11 +223,16 @@ class FitGridPlusGroupPanel extends StatelessWidget {
                         color: colorScheme.primary,
                       ),
                       const SizedBox(width: 4),
-                      MouseRegion(
-                        cursor: SystemMouseCursors.click,
-                        child: GestureDetector(
-                          behavior: HitTestBehavior.opaque,
-                          onTap: () => controller.removeGroup(field),
+                      Tooltip(
+                        message: 'Remove group by ${col.title}',
+                        child: InkResponse(
+                          radius: 12,
+                          onTap: () {
+                            controller.removeGroup(field);
+                            if (col.field != field) {
+                              controller.removeGroup(col.field);
+                            }
+                          },
                           child: Padding(
                             padding: const EdgeInsets.all(4.0),
                             child: Icon(

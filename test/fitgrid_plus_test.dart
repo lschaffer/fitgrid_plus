@@ -109,13 +109,19 @@ void main() {
     });
 
     test('Grouping by field activates hierarchical grouping', () {
-      controller.setGrouping(['category']);
-      expect(controller.activeGrouping, ['category']);
+      controller.setGrouping(['category', 'name']);
+      expect(controller.activeGrouping, ['category', 'name']);
+      controller.removeGroup('category');
+      expect(controller.activeGrouping, ['name']);
       controller.clearGrouping();
       expect(controller.activeGrouping, isEmpty);
     });
 
     test('Filtering operates accurately', () {
+      controller.setFilter('category', operator: 'equals', value: 'Cat1');
+      expect(controller.activeFilters.containsKey('category'), isTrue);
+      controller.removeFilter('category');
+      expect(controller.activeFilters.isEmpty, isTrue);
       controller.setFilter('category', operator: 'equals', value: 'Cat1');
       expect(controller.activeFilters.containsKey('category'), isTrue);
       controller.clearAllFilters();
