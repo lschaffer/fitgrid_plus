@@ -253,6 +253,14 @@ final sheet = await _controller.importExcel(context: context);
 
 ---
 
+## 🤖 Agent Skills / AI Coding Assistants
+
+`fitgrid_plus` includes a built-in coding agent skill specification located at [`.agents/skills/fitgrid-plus/SKILL.md`](.agents/skills/fitgrid-plus/SKILL.md).
+
+Coding assistants such as **Antigravity**, **Claude Code**, **Cursor**, **Windsurf**, and **Roo Code** can automatically discover and read this skill to get comprehensive integration patterns, DevExtreme editing setup, dynamic pivot grid configurations, and architectural best practices with zero hallucination.
+
+---
+
 ## 📄 License
 
 MIT License. Designed and built with ❤️ for Flutter developers needing high performance enterprise tables.
