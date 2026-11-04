@@ -239,6 +239,11 @@ class _FitGridPlusState extends State<FitGridPlus> {
     if (widget.pageSize != null || widget.enablePagination) {
       _fitController.pagination.enabled = true;
       _fitController.pagination.pageSize = widget.pageSize ?? 40;
+      _controller.setPagination(
+        true,
+        pageSize: widget.pageSize ?? 40,
+        notify: false,
+      );
     }
 
     _controller.attach(
@@ -333,6 +338,14 @@ class _FitGridPlusState extends State<FitGridPlus> {
         widget.contextMenuConfiguration != oldWidget.contextMenuConfiguration) {
       _controller.setContextMenuConfig(
         widget.contextMenuConfiguration!,
+        notify: false,
+      );
+    }
+    if (widget.enablePagination != oldWidget.enablePagination ||
+        widget.pageSize != oldWidget.pageSize) {
+      _controller.setPagination(
+        widget.enablePagination,
+        pageSize: widget.pageSize,
         notify: false,
       );
     }
@@ -445,31 +458,45 @@ class _FitGridPlusState extends State<FitGridPlus> {
             children: [
               Tooltip(
                 message: 'Save',
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(4),
-                  onTap: () async {
-                    final err = await _controller.saveEdit();
-                    if (err != null && context.mounted) {
-                      _showValidationErrorsDialog(context);
+                child: Focus(
+                  onFocusChange: (hasFocus) {
+                    if (hasFocus) {
+                      _controller.scrollToColumn('__actions__', padding: 40.0);
                     }
                   },
-                  child: const Padding(
-                    padding: EdgeInsets.all(4),
-                    child: Icon(Icons.check, size: 18, color: Colors.green),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(4),
+                    onTap: () async {
+                      final err = await _controller.saveEdit();
+                      if (err != null && context.mounted) {
+                        _showValidationErrorsDialog(context);
+                      }
+                    },
+                    child: const Padding(
+                      padding: EdgeInsets.all(4),
+                      child: Icon(Icons.check, size: 18, color: Colors.green),
+                    ),
                   ),
                 ),
               ),
               const SizedBox(width: 6),
               Tooltip(
                 message: 'Cancel',
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(4),
-                  onTap: () {
-                    _controller.cancelEdit();
+                child: Focus(
+                  onFocusChange: (hasFocus) {
+                    if (hasFocus) {
+                      _controller.scrollToColumn('__actions__', padding: 40.0);
+                    }
                   },
-                  child: const Padding(
-                    padding: EdgeInsets.all(4),
-                    child: Icon(Icons.close, size: 18, color: Colors.red),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(4),
+                    onTap: () {
+                      _controller.cancelEdit();
+                    },
+                    child: const Padding(
+                      padding: EdgeInsets.all(4),
+                      child: Icon(Icons.close, size: 18, color: Colors.red),
+                    ),
                   ),
                 ),
               ),
@@ -777,6 +804,15 @@ class _FitGridPlusState extends State<FitGridPlus> {
           behavior: HitTestBehavior.opaque,
           onPointerDown: (_) {},
           child: Focus(
+            onFocusChange: (hasFocus) {
+              if (hasFocus) {
+                _controller.scrollToCell(
+                  _controller.editingRowIndex ?? 0,
+                  col.field,
+                  padding: 80.0,
+                );
+              }
+            },
             child: Builder(
               builder: (focusCtx) {
                 final isFocused = Focus.of(focusCtx).hasFocus;
@@ -1303,8 +1339,11 @@ class _FitGridPlusState extends State<FitGridPlus> {
       resizableColumns: true,
       multiSort: true,
       editTrigger: effectiveEditTrigger,
-      paginated: widget.enablePagination || widget.pageSize != null,
-      pageSize: widget.pageSize ?? 40,
+      paginated:
+          _controller.isPaginated ||
+          widget.enablePagination ||
+          widget.pageSize != null,
+      pageSize: _controller.pageSize,
       detailBuilder:
           (!_controller.isPivotActive && _controller.isMasterDetailEnabled)
           ? (context, row, rowIndex) {

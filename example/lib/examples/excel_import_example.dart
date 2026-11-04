@@ -105,37 +105,41 @@ class _ExcelImportExamplePageState extends State<ExcelImportExamplePage> {
                   ),
                 ),
               ),
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    const Icon(Icons.table_chart_rounded, color: Color(0xFF107C41), size: 22),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Pure-Dart Excel (.xlsx) Ingestion',
-                      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(width: 8),
-                    if (_activeSheetName.isNotEmpty)
-                      Chip(
-                        avatar: const Icon(Icons.description_outlined, size: 16),
-                        label: Text('Sheet: $_activeSheetName'),
-                        visualDensity: VisualDensity.compact,
+              child: Wrap(
+                spacing: 12,
+                runSpacing: 8,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.table_chart_rounded, color: Color(0xFF107C41), size: 22),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Pure-Dart Excel (.xlsx) Ingestion',
+                        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                       ),
-                    const SizedBox(width: 20),
-                    FilledButton.tonalIcon(
-                      icon: const Icon(Icons.layers_outlined, size: 16),
-                      label: const Text('Switch Worksheet'),
-                      onPressed: _pickAnotherSheet,
-                    ),
-                    const SizedBox(width: 8),
-                    FilledButton.icon(
-                      icon: const Icon(Icons.file_upload_outlined, size: 16),
-                      label: const Text('Import Custom .xlsx'),
-                      onPressed: () => _controller.importExcel(context: context),
-                    ),
-                  ],
-                ),
+                      if (_activeSheetName.isNotEmpty) ...[
+                        const SizedBox(width: 8),
+                        Chip(
+                          avatar: const Icon(Icons.description_outlined, size: 16),
+                          label: Text('Sheet: $_activeSheetName'),
+                          visualDensity: VisualDensity.compact,
+                        ),
+                      ],
+                    ],
+                  ),
+                  FilledButton.tonalIcon(
+                    icon: const Icon(Icons.layers_outlined, size: 16),
+                    label: const Text('Switch Worksheet'),
+                    onPressed: _pickAnotherSheet,
+                  ),
+                  FilledButton.icon(
+                    icon: const Icon(Icons.file_upload_outlined, size: 16),
+                    label: const Text('Import Custom .xlsx'),
+                    onPressed: () => _controller.importExcel(context: context),
+                  ),
+                ],
               ),
             ),
             Expanded(

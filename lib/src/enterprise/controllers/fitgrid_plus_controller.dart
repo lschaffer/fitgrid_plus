@@ -709,6 +709,9 @@ class FitGridPlusController extends ChangeNotifier {
   /// Whether controller is attached to an active grid controller.
   bool get isAttached => _fitController != null;
 
+  bool _isPaginationEnabled = false;
+  int _pageSize = 25;
+
   /// Current page number (1-based index).
   int get page => (_fitController?.pagination.pageIndex ?? 0) + 1;
 
@@ -716,10 +719,33 @@ class FitGridPlusController extends ChangeNotifier {
   int get totalPage => _fitController?.pagination.pageCount ?? 1;
 
   /// Number of rows per page.
-  int get pageSize => _fitController?.pagination.pageSize ?? 40;
+  int get pageSize => _fitController?.pagination.pageSize ?? _pageSize;
 
   /// Whether pagination is currently active on the grid.
-  bool get isPaginated => _fitController?.pagination.enabled ?? false;
+  bool get isPaginated =>
+      _fitController?.pagination.enabled ?? _isPaginationEnabled;
+
+  /// Enables or disables client-side pagination on the grid.
+  void setPagination(bool enabled, {int? pageSize, bool notify = true}) {
+    _isPaginationEnabled = enabled;
+    if (pageSize != null && pageSize > 0) {
+      _pageSize = pageSize;
+    }
+    if (_fitController != null) {
+      _fitController!.pagination.enabled = enabled;
+      if (pageSize != null && pageSize > 0) {
+        _fitController!.pagination.pageSize = pageSize;
+      }
+    }
+    if (notify) {
+      notifyListeners();
+    }
+  }
+
+  /// Toggles client-side pagination on or off.
+  void togglePagination() {
+    setPagination(!isPaginated);
+  }
 
   /// Navigates to a specific page number (1-based).
   void setPage(int page) {
@@ -731,9 +757,27 @@ class FitGridPlusController extends ChangeNotifier {
 
   /// Sets the number of rows displayed per page.
   void setPageSize(int size) {
-    if (_fitController != null && _fitController!.pagination.enabled) {
-      _fitController!.pagination.pageSize = size;
-      notifyListeners();
+    if (size > 0) {
+      _pageSize = size;
+      if (_fitController != null && _fitController!.pagination.enabled) {
+        _fitController!.pagination.pageSize = size;
+        notifyListeners();
+      }
+    }
+  }
+
+  /// Scrolls the grid to ensure the specified cell (row and/or column) is visible.
+  void scrollToCell(int rowIndex, String? columnId, {double padding = 60.0}) {
+    if (_fitController != null && rowIndex >= 0) {
+      _fitController!.scrollTo(rowIndex, columnId: columnId, padding: padding);
+    }
+  }
+
+  /// Scrolls the grid horizontally to ensure the specified column is visible.
+  void scrollToColumn(String columnId, {double padding = 60.0}) {
+    if (_fitController != null) {
+      final currentRow = _editingRowIndex ?? 0;
+      _fitController!.scrollTo(currentRow, columnId: columnId, padding: padding);
     }
   }
 
@@ -821,6 +865,11 @@ class FitGridPlusController extends ChangeNotifier {
           _fitController!.columns.setVisible(col.field, false);
         }
       }
+    }
+
+    if (_isPaginationEnabled) {
+      _fitController!.pagination.enabled = true;
+      _fitController!.pagination.pageSize = _pageSize;
     }
 
     if (notify) {

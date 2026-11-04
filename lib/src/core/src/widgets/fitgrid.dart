@@ -1146,10 +1146,14 @@ class _FitGridState<T> extends State<FitGrid<T>> {
         ? (widget.emptyState ?? _defaultEmptyState(theme, source))
         : Scrollbar(
             controller: _verticalController,
+            thumbVisibility: true,
+            interactive: true,
             notificationPredicate: (notification) =>
                 notification.metrics.axis == Axis.vertical,
             child: Scrollbar(
               controller: _horizontalController,
+              thumbVisibility: true,
+              interactive: true,
               notificationPredicate: (notification) =>
                   notification.metrics.axis == Axis.horizontal,
               child: _wrapGestures(

@@ -72,33 +72,37 @@ class _MobileCardViewExamplePageState extends State<MobileCardViewExamplePage> {
                   ),
                 ),
               ),
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    Icon(Icons.view_agenda_rounded, color: theme.colorScheme.primary, size: 22),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Mobile Card / Feed Responsive View',
-                      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(width: 20),
-                    ListenableBuilder(
-                      listenable: _controller,
-                      builder: (context, _) {
-                        final isCard = _controller.viewMode == FitGridPlusViewMode.card;
-                        return FilledButton.tonalIcon(
-                          icon: Icon(
-                            isCard ? Icons.table_chart_outlined : Icons.view_agenda_outlined,
-                            size: 16,
-                          ),
-                          label: Text(isCard ? 'Switch to DataGrid' : 'Switch to Card Feed'),
-                          onPressed: _controller.toggleViewMode,
-                        );
-                      },
-                    ),
-                  ],
-                ),
+              child: Wrap(
+                spacing: 12,
+                runSpacing: 8,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.view_agenda_rounded, color: theme.colorScheme.primary, size: 22),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Mobile Card / Feed Responsive View',
+                        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                  ListenableBuilder(
+                    listenable: _controller,
+                    builder: (context, _) {
+                      final isCard = _controller.viewMode == FitGridPlusViewMode.card;
+                      return FilledButton.tonalIcon(
+                        icon: Icon(
+                          isCard ? Icons.table_chart_outlined : Icons.view_agenda_outlined,
+                          size: 16,
+                        ),
+                        label: Text(isCard ? 'Switch to DataGrid' : 'Switch to Card Feed'),
+                        onPressed: _controller.toggleViewMode,
+                      );
+                    },
+                  ),
+                ],
               ),
             ),
             Expanded(

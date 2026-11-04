@@ -227,51 +227,53 @@ class _ConditionalFormattingExamplePageState
                   ),
                 ),
               ),
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    Icon(Icons.palette_rounded, color: theme.colorScheme.primary, size: 22),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Conditional Formatting & Visuals',
-                      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(width: 20),
-                    FilterChip(
-                      label: const Text('Data Bars'),
-                      selected: _showDataBars,
-                      onSelected: (bool val) {
-                        setState(() {
-                          _showDataBars = val;
-                          _setupGrid();
-                        });
-                      },
-                    ),
-                    const SizedBox(width: 8),
-                    FilterChip(
-                      label: const Text('Sparklines'),
-                      selected: _showSparklines,
-                      onSelected: (bool val) {
-                        setState(() {
-                          _showSparklines = val;
-                          _setupGrid();
-                        });
-                      },
-                    ),
-                    const SizedBox(width: 8),
-                    FilterChip(
-                      label: const Text('Highlight Loss'),
-                      selected: _showRowHighlights,
-                      onSelected: (bool val) {
-                        setState(() {
-                          _showRowHighlights = val;
-                          _setupGrid();
-                        });
-                      },
-                    ),
-                  ],
-                ),
+              child: Wrap(
+                spacing: 12,
+                runSpacing: 8,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.palette_rounded, color: theme.colorScheme.primary, size: 22),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Conditional Formatting & Visuals',
+                        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                  FilterChip(
+                    label: const Text('Data Bars'),
+                    selected: _showDataBars,
+                    onSelected: (bool val) {
+                      setState(() {
+                        _showDataBars = val;
+                        _setupGrid();
+                      });
+                    },
+                  ),
+                  FilterChip(
+                    label: const Text('Sparklines'),
+                    selected: _showSparklines,
+                    onSelected: (bool val) {
+                      setState(() {
+                        _showSparklines = val;
+                        _setupGrid();
+                      });
+                    },
+                  ),
+                  FilterChip(
+                    label: const Text('Highlight Loss'),
+                    selected: _showRowHighlights,
+                    onSelected: (bool val) {
+                      setState(() {
+                        _showRowHighlights = val;
+                        _setupGrid();
+                      });
+                    },
+                  ),
+                ],
               ),
             ),
             Expanded(

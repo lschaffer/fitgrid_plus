@@ -29,6 +29,7 @@ class _SuperstoreEnterpriseExamplePageState
   late final FitGridPlusController _controller;
   late final LocalFitGridPlusDataSource _dataSource;
   FitGridPlusEditMode _editMode = FitGridPlusEditMode.row;
+  bool _isPagingEnabled = false;
 
   @override
   void initState() {
@@ -133,80 +134,117 @@ class _SuperstoreEnterpriseExamplePageState
                   ),
                 ),
               ),
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    Icon(Icons.table_chart_rounded, color: theme.colorScheme.primary, size: 22),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Superstore Enterprise Grid',
-                      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.primaryContainer,
-                        borderRadius: BorderRadius.circular(12),
+              child: Wrap(
+                spacing: 12,
+                runSpacing: 8,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.table_chart_rounded, color: theme.colorScheme.primary, size: 22),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Superstore Enterprise Grid',
+                        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                       ),
-                      child: Text(
-                        '1,000 Records',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: theme.colorScheme.onPrimaryContainer,
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primaryContainer,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          '1,000 Records',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: theme.colorScheme.onPrimaryContainer,
+                          ),
                         ),
                       ),
+                    ],
+                  ),
+                  // Edit mode segmented control
+                  SegmentedButton<FitGridPlusEditMode>(
+                    segments: const [
+                      ButtonSegment(
+                        value: FitGridPlusEditMode.cell,
+                        label: Text('Cell Edit'),
+                        icon: Icon(Icons.touch_app_outlined, size: 15),
+                      ),
+                      ButtonSegment(
+                        value: FitGridPlusEditMode.row,
+                        label: Text('Row Edit'),
+                        icon: Icon(Icons.edit_note, size: 15),
+                      ),
+                      ButtonSegment(
+                        value: FitGridPlusEditMode.form,
+                        label: Text('Form Popup'),
+                        icon: Icon(Icons.open_in_browser, size: 15),
+                      ),
+                    ],
+                    selected: {_editMode},
+                    onSelectionChanged: (Set<FitGridPlusEditMode> selected) {
+                      setState(() {
+                        _editMode = selected.first;
+                        _updateEditingOptions();
+                      });
+                    },
+                  ),
+                  // Paging Checkbox
+                  InkWell(
+                    onTap: () {
+                      setState(() {
+                        _isPagingEnabled = !_isPagingEnabled;
+                        _controller.setPagination(_isPagingEnabled, pageSize: 25);
+                      });
+                    },
+                    borderRadius: BorderRadius.circular(6),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Checkbox(
+                            value: _isPagingEnabled,
+                            onChanged: (val) {
+                              setState(() {
+                                _isPagingEnabled = val ?? false;
+                                _controller.setPagination(_isPagingEnabled, pageSize: 25);
+                              });
+                            },
+                            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            visualDensity: VisualDensity.compact,
+                          ),
+                          const SizedBox(width: 4),
+                          const Text(
+                            'Paging (25)',
+                            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+                          ),
+                        ],
+                      ),
                     ),
-                    const SizedBox(width: 24),
-                    // Edit mode segmented control
-                    SegmentedButton<FitGridPlusEditMode>(
-                      segments: const [
-                        ButtonSegment(
-                          value: FitGridPlusEditMode.cell,
-                          label: Text('Cell Edit'),
-                          icon: Icon(Icons.touch_app_outlined, size: 15),
-                        ),
-                        ButtonSegment(
-                          value: FitGridPlusEditMode.row,
-                          label: Text('Row Edit'),
-                          icon: Icon(Icons.edit_note, size: 15),
-                        ),
-                        ButtonSegment(
-                          value: FitGridPlusEditMode.form,
-                          label: Text('Form Popup'),
-                          icon: Icon(Icons.open_in_browser, size: 15),
-                        ),
-                      ],
-                      selected: {_editMode},
-                      onSelectionChanged: (Set<FitGridPlusEditMode> selected) {
-                        setState(() {
-                          _editMode = selected.first;
-                          _updateEditingOptions();
-                        });
-                      },
-                    ),
-                    const SizedBox(width: 12),
-                    ListenableBuilder(
-                      listenable: _controller,
-                      builder: (context, _) {
-                        if (_controller.isPivotActive) {
-                          return FilledButton.tonalIcon(
-                            icon: const Icon(Icons.undo, size: 16),
-                            label: const Text('Exit Pivot'),
-                            onPressed: _controller.clearPivot,
-                          );
-                        }
-                        return FilledButton.icon(
-                          icon: const Icon(Icons.pivot_table_chart, size: 16),
-                          label: const Text('Quick Pivot & Chart'),
-                          onPressed: _applyQuickPivot,
+                  ),
+                  ListenableBuilder(
+                    listenable: _controller,
+                    builder: (context, _) {
+                      if (_controller.isPivotActive) {
+                        return FilledButton.tonalIcon(
+                          icon: const Icon(Icons.undo, size: 16),
+                          label: const Text('Exit Pivot'),
+                          onPressed: _controller.clearPivot,
                         );
-                      },
-                    ),
-                  ],
-                ),
+                      }
+                      return FilledButton.icon(
+                        icon: const Icon(Icons.pivot_table_chart, size: 16),
+                        label: const Text('Quick Pivot'),
+                        onPressed: _applyQuickPivot,
+                      );
+                    },
+                  ),
+                ],
               ),
             ),
             // The Main FitGridPlus DataGrid
@@ -217,7 +255,8 @@ class _SuperstoreEnterpriseExamplePageState
                 showToolbar: true,
                 cellSelection: true,
                 showSelectionStatusBar: true,
-                enablePagination: false,
+                enablePagination: _isPagingEnabled,
+                pageSize: 25,
                 autoSave: true,
                 persistenceKey: 'fitgrid_plus_superstore_demo',
               ),
