@@ -344,22 +344,25 @@ class _FilterFieldState<T> extends State<_FilterField<T>> {
               minWidth: theme.sortIconSize + 8,
             ),
             suffixIcon: (active || text.isNotEmpty)
-                ? IconButton(
-                    icon: Icon(
-                      Icons.close,
-                      size: theme.sortIconSize + 2,
-                      color: active
-                          ? theme.focusOutline
-                          : theme.placeholderForeground,
+                ? Tooltip(
+                    message: strings.clearFilter,
+                    child: MouseRegion(
+                      cursor: SystemMouseCursors.click,
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: _clear,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                          child: Icon(
+                            Icons.close,
+                            size: theme.sortIconSize + 2,
+                            color: active
+                                ? theme.focusOutline
+                                : theme.placeholderForeground,
+                          ),
+                        ),
+                      ),
                     ),
-                    tooltip: strings.clearFilter,
-                    padding: EdgeInsets.zero,
-                    constraints: BoxConstraints(
-                      minWidth: theme.sortIconSize + 12,
-                      minHeight: theme.sortIconSize + 12,
-                    ),
-                    splashRadius: (theme.sortIconSize + 12) / 2,
-                    onPressed: _clear,
                   )
                 : null,
             suffixIconConstraints: BoxConstraints(
@@ -443,23 +446,26 @@ class _ChecklistButton<T> extends StatelessWidget {
                   ),
                   if (active) ...[
                     const SizedBox(width: 4),
-                    IconButton(
-                      icon: Icon(
-                        Icons.close,
-                        size: theme.sortIconSize,
-                        color: theme.focusOutline,
+                    Tooltip(
+                      message: strings.clearFilter,
+                      child: MouseRegion(
+                        cursor: SystemMouseCursors.click,
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: () {
+                            filter.setFilter(column.id, null);
+                            filter.setColumnFilter(column.id, null);
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                            child: Icon(
+                              Icons.close,
+                              size: theme.sortIconSize,
+                              color: theme.focusOutline,
+                            ),
+                          ),
+                        ),
                       ),
-                      tooltip: strings.clearFilter,
-                      padding: EdgeInsets.zero,
-                      constraints: BoxConstraints(
-                        minWidth: theme.sortIconSize + 8,
-                        minHeight: theme.sortIconSize + 8,
-                      ),
-                      splashRadius: (theme.sortIconSize + 8) / 2,
-                      onPressed: () {
-                        filter.setFilter(column.id, null);
-                        filter.setColumnFilter(column.id, null);
-                      },
                     ),
                   ],
                 ],

@@ -225,20 +225,26 @@ class FitGridPlusGroupPanel extends StatelessWidget {
                       const SizedBox(width: 4),
                       Tooltip(
                         message: 'Remove group by ${col.title}',
-                        child: InkResponse(
-                          radius: 12,
-                          onTap: () {
-                            controller.removeGroup(field);
-                            if (col.field != field) {
-                              controller.removeGroup(col.field);
-                            }
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.all(4.0),
-                            child: Icon(
-                              Icons.close,
-                              size: 14,
-                              color: colorScheme.onSurfaceVariant,
+                        child: MouseRegion(
+                          cursor: SystemMouseCursors.click,
+                          child: GestureDetector(
+                            behavior: HitTestBehavior.opaque,
+                            onTap: () {
+                              controller.removeGroup(field);
+                              if (col.field != field) {
+                                controller.removeGroup(col.field);
+                              }
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 4.0,
+                                vertical: 2.0,
+                              ),
+                              child: Icon(
+                                Icons.close,
+                                size: 14,
+                                color: colorScheme.onSurfaceVariant,
+                              ),
                             ),
                           ),
                         ),

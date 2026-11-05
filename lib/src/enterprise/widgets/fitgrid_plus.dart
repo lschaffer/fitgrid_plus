@@ -460,8 +460,10 @@ class _FitGridPlusState extends State<FitGridPlus> {
                 message: 'Save',
                 child: Focus(
                   onFocusChange: (hasFocus) {
-                    if (hasFocus) {
-                      _controller.scrollToColumn('__actions__', padding: 40.0);
+                    if (hasFocus && mounted) {
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        if (mounted) _controller.scrollToColumn('__actions__', padding: 40.0);
+                      });
                     }
                   },
                   child: InkWell(
@@ -484,8 +486,10 @@ class _FitGridPlusState extends State<FitGridPlus> {
                 message: 'Cancel',
                 child: Focus(
                   onFocusChange: (hasFocus) {
-                    if (hasFocus) {
-                      _controller.scrollToColumn('__actions__', padding: 40.0);
+                    if (hasFocus && mounted) {
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        if (mounted) _controller.scrollToColumn('__actions__', padding: 40.0);
+                      });
                     }
                   },
                   child: InkWell(
@@ -623,29 +627,35 @@ class _FitGridPlusState extends State<FitGridPlus> {
           );
         } else if (col.editorType == FitGridPlusEditorType.select ||
             col.type == FitGridPlusColumnType.select) {
-          final options = <String>[];
+          final rawOptions = <String>[];
           if (col.selectOptions != null) {
-            options.addAll(col.selectOptions!);
+            rawOptions.addAll(col.selectOptions!);
           } else if (col.editorOptions?['items'] is List) {
             for (final item in col.editorOptions!['items'] as List) {
-              options.add(item.toString());
+              rawOptions.add(item.toString());
             }
           }
+          final cleanOptions = <String>[];
+          for (final opt in rawOptions) {
+            if (!cleanOptions.contains(opt)) cleanOptions.add(opt);
+          }
           final currentStr = val?.toString();
-          final effectiveVal = options.contains(currentStr) ? currentStr : null;
+          final effectiveVal = cleanOptions.contains(currentStr) ? currentStr : null;
 
           editor = DropdownButtonHideUnderline(
             child: DropdownButton<String>(
               isDense: true,
               isExpanded: true,
               value: effectiveVal,
+              focusNode: FocusNode(skipTraversal: true),
+              menuMaxHeight: 280,
               style: TextStyle(
                 fontSize: 13,
                 color: isDark ? Colors.white : Colors.black87,
               ),
-              items: options
+              items: cleanOptions
                   .map(
-                    (opt) => DropdownMenuItem(
+                    (opt) => DropdownMenuItem<String>(
                       value: opt,
                       child: Text(
                         opt,
@@ -800,17 +810,26 @@ class _FitGridPlusState extends State<FitGridPlus> {
                     )
                   : const Color(0xFFFBFDFF));
 
+        final isSelectOrBool = col.editorType == FitGridPlusEditorType.select ||
+            col.type == FitGridPlusColumnType.select ||
+            col.editorType == FitGridPlusEditorType.boolean ||
+            col.type == FitGridPlusColumnType.boolean;
+
         Widget styledCell = Listener(
           behavior: HitTestBehavior.opaque,
           onPointerDown: (_) {},
           child: Focus(
             onFocusChange: (hasFocus) {
-              if (hasFocus) {
-                _controller.scrollToCell(
-                  _controller.editingRowIndex ?? 0,
-                  col.field,
-                  padding: 80.0,
-                );
+              if (hasFocus && !isSelectOrBool && mounted) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (mounted && _controller.isEditingRow) {
+                    _controller.scrollToCell(
+                      _controller.editingRowIndex ?? 0,
+                      col.field,
+                      padding: 80.0,
+                    );
+                  }
+                });
               }
             },
             child: Builder(

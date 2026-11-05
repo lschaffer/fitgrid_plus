@@ -23,6 +23,7 @@ class DynamicFitGridPlusExamplePage extends StatefulWidget {
 class _DynamicFitGridPlusExamplePageState
     extends State<DynamicFitGridPlusExamplePage> {
   late final FitGridPlusController _controller;
+  FitGridPlusDataSource? _dataSource;
 
   static const String _sampleCsv = '''Employee ID,Full Name,Department,Salary,Hire Date,Active
 EMP-101,Alice Johnson,Engineering,125000,2022-03-15,true
@@ -84,9 +85,21 @@ data:
     final ds = LocalFitGridPlusDataSource(
       columns: columns,
       initialData: parsed.rows,
-      isReadonly: true,
+      isReadonly: false,
     );
-    _controller.attach(columns: columns, dataSource: ds);
+    setState(() {
+      _dataSource = ds;
+    });
+    _controller.loadDynamicDatasource(
+      FitGridPlusDynamicDescriptor(
+        name: 'sample_employees_csv',
+        title: 'Employees Directory',
+        isReadonly: false,
+        sourceType: 'csv',
+      ),
+      columns,
+      parsed.rows,
+    );
   }
 
   void _loadMarkdownSample() {
@@ -109,9 +122,21 @@ data:
       final ds = LocalFitGridPlusDataSource(
         columns: columns,
         initialData: parsed.rows,
-        isReadonly: true,
+        isReadonly: false,
       );
-      _controller.attach(columns: columns, dataSource: ds);
+      setState(() {
+        _dataSource = ds;
+      });
+      _controller.loadDynamicDatasource(
+        FitGridPlusDynamicDescriptor(
+          name: 'sample_server_metrics_md',
+          title: 'Server Metrics',
+          isReadonly: false,
+          sourceType: 'markdown',
+        ),
+        columns,
+        parsed.rows,
+      );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Loaded Markdown Server Metrics table!')),
@@ -126,9 +151,16 @@ data:
     final ds = LocalFitGridPlusDataSource(
       columns: columns,
       initialData: bundle.rows,
-      isReadonly: true,
+      isReadonly: false,
     );
-    _controller.attach(columns: columns, dataSource: ds);
+    setState(() {
+      _dataSource = ds;
+    });
+    _controller.loadDynamicDatasource(
+      bundle.model.toDescriptor(rowCount: bundle.rows.length),
+      columns,
+      bundle.rows,
+    );
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Loaded YAML Cloud Fleet table!')),
@@ -191,19 +223,29 @@ data:
                     label: const Text('Load YAML Sample'),
                     onPressed: _loadYamlSample,
                   ),
+                  FilledButton.tonalIcon(
+                    icon: const Icon(Icons.tune_rounded, size: 16),
+                    label: const Text('Edit Columns'),
+                    onPressed: () => _controller.showColumnsEditorDialog(context),
+                  ),
                 ],
               ),
             ),
             Expanded(
               child: FitGridPlus(
                 controller: _controller,
-                dataSource: _controller.dataSource ??
+                dataSource: _dataSource ??
+                    _controller.dataSource ??
                     LocalFitGridPlusDataSource(
                       columns: const [],
                       initialData: const [],
-                      isReadonly: true,
+                      isReadonly: false,
                     ),
-                editingOptions: const FitGridPlusEditingOptions(enabled: false),
+                editingOptions: const FitGridPlusEditingOptions(
+                  enabled: true,
+                  allowUpdating: true,
+                  mode: FitGridPlusEditMode.cell,
+                ),
                 showToolbar: true,
                 dynamicGrid: true,
                 cellSelection: true,

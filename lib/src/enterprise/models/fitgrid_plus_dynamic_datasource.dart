@@ -195,6 +195,20 @@ class FitGridPlusDynamicModel {
   List<FitGridPlusColumn> toColumns() =>
       columns.map((c) => c.toFitGridPlusColumn()).toList();
 
+  FitGridPlusDynamicDescriptor toDescriptor({int rowCount = 0}) =>
+      FitGridPlusDynamicDescriptor(
+        name: datasourceName,
+        modelName: modelName,
+        datasourceName: datasourceName,
+        title: title,
+        sourceType: sourceType,
+        sourceOrigin: sourceOrigin,
+        isReadonly: isReadonly,
+        createdAt: createdAt,
+        updatedAt: DateTime.now(),
+        rowCount: rowCount,
+      );
+
   Map<String, dynamic> toJson() => {
         'version': '1.0',
         'model_name': modelName,
@@ -302,18 +316,22 @@ class FitGridPlusDynamicDescriptor {
   final DateTime updatedAt;
   final int rowCount;
 
-  const FitGridPlusDynamicDescriptor({
+  FitGridPlusDynamicDescriptor({
     required this.name,
-    required this.modelName,
-    required this.datasourceName,
+    String? modelName,
+    String? datasourceName,
     required this.title,
     this.sourceType = 'file',
     this.sourceOrigin,
     this.isReadonly = false,
-    required this.createdAt,
-    required this.updatedAt,
-    required this.rowCount,
-  });
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    int? rowCount,
+  })  : modelName = modelName ?? name,
+        datasourceName = datasourceName ?? name,
+        createdAt = createdAt ?? DateTime.now(),
+        updatedAt = updatedAt ?? DateTime.now(),
+        rowCount = rowCount ?? 0;
 
   Map<String, dynamic> toJson() => {
         'name': name,
