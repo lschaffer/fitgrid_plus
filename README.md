@@ -2,6 +2,11 @@
 
 A high-performance, enterprise-grade virtualized canvas **DataGrid** for Flutter with **zero AI/LLM/MCP overhead**.
 
+[![Live Demo](https://img.shields.io/badge/Live_Demo-tealkit.dev%2Ffitgrid__plus-007acc?style=for-the-badge&logo=flutter&logoColor=white)](https://tealkit.dev/fitgrid_plus/)
+[![pub package](https://img.shields.io/pub/v/fitgrid_plus.svg)](https://pub.dev/packages/fitgrid_plus)
+
+🌐 **Try the Live Online Demo**: [https://tealkit.dev/fitgrid_plus/](https://tealkit.dev/fitgrid_plus/)
+
 <p align="center">
   <img src="https://raw.githubusercontent.com/lschaffer/fitgrid_plus/main/fitgrid_plus_example.gif" alt="FitGrid Plus Enterprise DataGrid Demo" width="100%" />
 </p>
