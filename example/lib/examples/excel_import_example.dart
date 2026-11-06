@@ -1,3 +1,4 @@
+import '../utils/source_launcher.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:fitgrid_plus/fitgrid_plus.dart';
 
@@ -138,6 +139,9 @@ class _ExcelImportExamplePageState extends State<ExcelImportExamplePage> {
                     icon: const Icon(Icons.file_upload_outlined, size: 16),
                     label: const Text('Import Custom .xlsx'),
                     onPressed: () => _controller.importExcel(context: context),
+                  ),
+                  const ExampleSourceButton(
+                    relativeFilePath: 'example/lib/examples/excel_import_example.dart',
                   ),
                 ],
               ),

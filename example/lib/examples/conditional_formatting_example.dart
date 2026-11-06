@@ -1,3 +1,4 @@
+import '../utils/source_launcher.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:fitgrid_plus/fitgrid_plus.dart';
 
@@ -272,6 +273,9 @@ class _ConditionalFormattingExamplePageState
                         _setupGrid();
                       });
                     },
+                  ),
+                  const ExampleSourceButton(
+                    relativeFilePath: 'example/lib/examples/conditional_formatting_example.dart',
                   ),
                 ],
               ),

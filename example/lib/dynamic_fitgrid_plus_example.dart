@@ -1,3 +1,4 @@
+import 'utils/source_launcher.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:fitgrid_plus/fitgrid_plus.dart';
 
@@ -227,6 +228,9 @@ data:
                     icon: const Icon(Icons.tune_rounded, size: 16),
                     label: const Text('Edit Columns'),
                     onPressed: () => _controller.showColumnsEditorDialog(context),
+                  ),
+                  const ExampleSourceButton(
+                    relativeFilePath: 'example/lib/dynamic_fitgrid_plus_example.dart',
                   ),
                 ],
               ),

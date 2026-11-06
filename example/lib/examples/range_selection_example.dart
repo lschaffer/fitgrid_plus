@@ -1,3 +1,4 @@
+import '../utils/source_launcher.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:fitgrid_plus/fitgrid_plus.dart';
 
@@ -244,6 +245,9 @@ class _RangeSelectionExamplePageState extends State<RangeSelectionExamplePage> {
                     icon: const Icon(Icons.copy, size: 16),
                     label: const Text('Copy Selection (TSV)'),
                     onPressed: _copySelectedRange,
+                  ),
+                  const ExampleSourceButton(
+                    relativeFilePath: 'example/lib/examples/range_selection_example.dart',
                   ),
                 ],
               ),

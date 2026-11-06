@@ -1,3 +1,4 @@
+import '../utils/source_launcher.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:fitgrid_plus/fitgrid_plus.dart';
 
@@ -101,6 +102,9 @@ class _MobileCardViewExamplePageState extends State<MobileCardViewExamplePage> {
                         onPressed: _controller.toggleViewMode,
                       );
                     },
+                  ),
+                  const ExampleSourceButton(
+                    relativeFilePath: 'example/lib/examples/mobile_card_view_example.dart',
                   ),
                 ],
               ),

@@ -1,3 +1,4 @@
+import '../utils/source_launcher.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:fitgrid_plus/fitgrid_plus.dart';
 
@@ -217,13 +218,24 @@ class _MasterDetailExamplePageState extends State<MasterDetailExamplePage> {
                   ),
                 ),
               ),
-              child: Row(
+              child: Wrap(
+                spacing: 12,
+                runSpacing: 8,
+                crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
-                  Icon(Icons.unfold_more_rounded, color: Theme.of(context).colorScheme.primary, size: 22),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Master-Detail Child Rows & Nested Grids',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.unfold_more_rounded, color: Theme.of(context).colorScheme.primary, size: 22),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Master-Detail Child Rows & Nested Grids',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                  const ExampleSourceButton(
+                    relativeFilePath: 'example/lib/examples/master_detail_example.dart',
                   ),
                 ],
               ),

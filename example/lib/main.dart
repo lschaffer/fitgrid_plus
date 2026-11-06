@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 
+import 'utils/source_launcher.dart';
 import 'dynamic_fitgrid_plus_example.dart';
 import 'examples/superstore_enterprise_example.dart';
 import 'examples/conditional_formatting_example.dart';
@@ -22,6 +23,7 @@ enum ShowcaseDemo {
     subtitle: 'DevExtreme editing, banded pivot matrix & canvas charts',
     icon: Icons.table_chart_rounded,
     badge: 'Flagship',
+    sourceFilePath: 'example/lib/examples/superstore_enterprise_example.dart',
   ),
   conditionalFormatting(
     id: 'conditional_formatting',
@@ -29,6 +31,7 @@ enum ShowcaseDemo {
     subtitle: 'In-cell data bars, profit colors, progress & sparklines',
     icon: Icons.palette_rounded,
     badge: 'Visuals',
+    sourceFilePath: 'example/lib/examples/conditional_formatting_example.dart',
   ),
   rangeSelection(
     id: 'range_selection',
@@ -36,6 +39,7 @@ enum ShowcaseDemo {
     subtitle: 'Excel-like drag selection, live summary metrics & TSV clipboard',
     icon: Icons.select_all_rounded,
     badge: 'Productivity',
+    sourceFilePath: 'example/lib/examples/range_selection_example.dart',
   ),
   masterDetail(
     id: 'master_detail',
@@ -43,6 +47,7 @@ enum ShowcaseDemo {
     subtitle: 'Expandable row details, nested grids & tabbed cards',
     icon: Icons.unfold_more_rounded,
     badge: 'Hierarchical',
+    sourceFilePath: 'example/lib/examples/master_detail_example.dart',
   ),
   dynamicGrid(
     id: 'dynamic_grid',
@@ -50,6 +55,7 @@ enum ShowcaseDemo {
     subtitle: 'Ingest from files (CSV, TSV, MD, JSON), Web GET & clipboard',
     icon: Icons.cloud_download_rounded,
     badge: 'Dynamic',
+    sourceFilePath: 'example/lib/dynamic_fitgrid_plus_example.dart',
   ),
   excelImport(
     id: 'excel_import',
@@ -57,6 +63,7 @@ enum ShowcaseDemo {
     subtitle: 'Native workbook reading, multi-sheet selection & schema inference',
     icon: Icons.file_present_rounded,
     badge: 'Excel I/O',
+    sourceFilePath: 'example/lib/examples/excel_import_example.dart',
   ),
   dataAuditor(
     id: 'data_auditor',
@@ -64,6 +71,7 @@ enum ShowcaseDemo {
     subtitle: 'Anomaly detection, duplicate cleaning & format cleanup',
     icon: Icons.health_and_safety_rounded,
     badge: 'Data Health',
+    sourceFilePath: 'example/lib/examples/data_auditor_example.dart',
   ),
   mobileCardView(
     id: 'mobile_card_view',
@@ -71,6 +79,7 @@ enum ShowcaseDemo {
     subtitle: '1-tap responsive switch between grid and feed card view',
     icon: Icons.view_agenda_rounded,
     badge: 'Responsive',
+    sourceFilePath: 'example/lib/examples/mobile_card_view_example.dart',
   );
 
   final String id;
@@ -78,6 +87,7 @@ enum ShowcaseDemo {
   final String subtitle;
   final IconData icon;
   final String badge;
+  final String sourceFilePath;
 
   const ShowcaseDemo({
     required this.id,
@@ -85,7 +95,10 @@ enum ShowcaseDemo {
     required this.subtitle,
     required this.icon,
     required this.badge,
+    required this.sourceFilePath,
   });
+
+  String get githubSourceUrl => '$kFitGridPlusRepoUrl/blob/main/$sourceFilePath';
 }
 
 class FitGridPlusShowcaseApp extends StatefulWidget {
@@ -203,6 +216,16 @@ class _ShowcaseGalleryShellState extends State<ShowcaseGalleryShell> {
           ],
         ),
         actions: [
+          ExampleSourceButton(
+            relativeFilePath: widget.currentDemo.sourceFilePath,
+            label: 'View Source',
+          ),
+          const SizedBox(width: 4),
+          IconButton(
+            tooltip: 'Open Repository on GitHub',
+            icon: const Icon(Icons.open_in_new_rounded, size: 20),
+            onPressed: () => launchSourceUrl(kFitGridPlusRepoUrl),
+          ),
           IconButton(
             tooltip: widget.isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode',
             icon: Icon(widget.isDarkMode ? Icons.light_mode_outlined : Icons.dark_mode_outlined),
@@ -310,6 +333,23 @@ class _ShowcaseGalleryShellState extends State<ShowcaseGalleryShell> {
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
+                    trailing: Tooltip(
+                      message: 'Source: ',
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(4),
+                        onTap: () => launchSourceUrl(demo.githubSourceUrl),
+                        child: Padding(
+                          padding: const EdgeInsets.all(4),
+                          child: Icon(
+                            Icons.code_rounded,
+                            size: 16,
+                            color: isSelected
+                                ? theme.colorScheme.primary
+                                : theme.colorScheme.onSurfaceVariant.withAlpha(160),
+                          ),
+                        ),
+                      ),
+                    ),
                     onTap: () => widget.onSelectDemo(demo),
                   ),
                 );
@@ -343,6 +383,11 @@ class _ShowcaseGalleryShellState extends State<ShowcaseGalleryShell> {
                     title: Text(demo.title),
                     subtitle: Text(demo.subtitle, maxLines: 1, overflow: TextOverflow.ellipsis),
                     selected: demo == widget.currentDemo,
+                    trailing: IconButton(
+                      icon: const Icon(Icons.code_rounded, size: 18),
+                      tooltip: 'View Source Code',
+                      onPressed: () => launchSourceUrl(demo.githubSourceUrl),
+                    ),
                     onTap: () {
                       Navigator.of(context).pop();
                       widget.onSelectDemo(demo);

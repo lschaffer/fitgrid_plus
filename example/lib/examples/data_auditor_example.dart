@@ -1,3 +1,4 @@
+import '../utils/source_launcher.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:fitgrid_plus/fitgrid_plus.dart';
 
@@ -205,6 +206,9 @@ class _DataAuditorExamplePageState extends State<DataAuditorExamplePage> {
                     icon: const Icon(Icons.troubleshoot, size: 16),
                     label: const Text('Inspect Anomaly Report'),
                     onPressed: _openAuditorDialog,
+                  ),
+                  const ExampleSourceButton(
+                    relativeFilePath: 'example/lib/examples/data_auditor_example.dart',
                   ),
                 ],
               ),
