@@ -236,15 +236,14 @@ class _FitGridPlusState extends State<FitGridPlus> {
       }
     }
 
-    if (widget.pageSize != null || widget.enablePagination) {
-      _fitController.pagination.enabled = true;
-      _fitController.pagination.pageSize = widget.pageSize ?? 40;
-      _controller.setPagination(
-        true,
-        pageSize: widget.pageSize ?? 40,
-        notify: false,
-      );
-    }
+    final shouldPaginate = widget.enablePagination;
+    _fitController.pagination.enabled = shouldPaginate;
+    _fitController.pagination.pageSize = widget.pageSize ?? 40;
+    _controller.setPagination(
+      shouldPaginate,
+      pageSize: widget.pageSize ?? 40,
+      notify: false,
+    );
 
     _controller.attach(
       fitController: _fitController,
@@ -1358,10 +1357,7 @@ class _FitGridPlusState extends State<FitGridPlus> {
       resizableColumns: true,
       multiSort: true,
       editTrigger: effectiveEditTrigger,
-      paginated:
-          _controller.isPaginated ||
-          widget.enablePagination ||
-          widget.pageSize != null,
+      paginated: _controller.isPaginated || widget.enablePagination,
       pageSize: _controller.pageSize,
       detailBuilder:
           (!_controller.isPivotActive && _controller.isMasterDetailEnabled)
