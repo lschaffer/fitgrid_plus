@@ -188,10 +188,11 @@ packages:
   fitgrid_plus:
     dependency: "direct main"
     description:
-      path: ".."
-      relative: true
-    source: path
-    version: "0.1.0"
+      name: fitgrid_plus
+      sha256: f82ce9e97663ecec1238f64fb72a080a581b152e66ccb891aac345b024d0476e
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.1.1"
   flutter:
     dependency: "direct main"
     description: flutter

@@ -10,8 +10,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  fitgrid_plus:
-    path: ../
+  fitgrid_plus: ^0.1.1
+    # path: ../
   material_ui: ^1.9.0
   intl: ^0.20.2
   url_launcher: ^6.3.3
