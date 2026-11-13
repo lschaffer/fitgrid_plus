@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.1.2
+   - update all depencies to latest stable version
+
 ## 0.1.1
 
 - **Live Demo**: Launched interactive web showcase at [https://tealkit.dev/fitgrid_plus/](https://tealkit.dev/fitgrid_plus/).
